@@ -2,6 +2,7 @@ package com.unireserver.backend.neranjana.service;
 
 import com.unireserver.backend.neranjana.model.Resource;
 import com.unireserver.backend.neranjana.repository.ResourceRepository;
+import com.unireserver.backend.neranjana.exception.ResourceNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -34,7 +35,7 @@ public class ResourceService {
 
     public Resource updateResource(String id, Resource resourceDetails) {
         Resource resource = resourceRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Resource not found with id: " + id));
+                .orElseThrow(() -> new ResourceNotFoundException("Resource not found with id: " + id));
 
         resource.setName(resourceDetails.getName());
         resource.setType(resourceDetails.getType());
