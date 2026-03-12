@@ -33,6 +33,8 @@ public class FacilityService {
         facility.setType(facilityDetails.getType());
         facility.setCapacity(facilityDetails.getCapacity());
         facility.setLocation(facilityDetails.getLocation());
+        facility.setBuilding(facilityDetails.getBuilding());
+        facility.setFloorNumber(facilityDetails.getFloorNumber());
         facility.setAvailabilityWindows(facilityDetails.getAvailabilityWindows());
         facility.setStatus(facilityDetails.getStatus());
         facility.setDescription(facilityDetails.getDescription());

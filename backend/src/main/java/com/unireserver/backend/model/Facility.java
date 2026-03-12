@@ -28,6 +28,10 @@ public class Facility {
     private Integer capacity;
 
     private String location;
+    
+    private String building;
+
+    private Integer floorNumber;
 
     private List<String> availabilityWindows;
 
