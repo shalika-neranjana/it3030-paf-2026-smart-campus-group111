@@ -5,6 +5,7 @@ import com.unireserver.backend.model.FacilityType;
 import com.unireserver.backend.service.FacilityService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -34,16 +35,19 @@ public class FacilityController {
     }
 
     @PostMapping
+    @PreAuthorize("hasAnyRole('ADMINISTRATOR', 'MANAGER')")
     public ResponseEntity<Facility> createFacility(@RequestBody Facility facility) {
         return ResponseEntity.ok(facilityService.createFacility(facility));
     }
 
     @PutMapping("/{id}")
+    @PreAuthorize("hasAnyRole('ADMINISTRATOR', 'MANAGER')")
     public ResponseEntity<Facility> updateFacility(@PathVariable String id, @RequestBody Facility facility) {
         return ResponseEntity.ok(facilityService.updateFacility(id, facility));
     }
 
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasAnyRole('ADMINISTRATOR', 'MANAGER')")
     public ResponseEntity<Void> deleteFacility(@PathVariable String id) {
         facilityService.deleteFacility(id);
         return ResponseEntity.noContent().build();
