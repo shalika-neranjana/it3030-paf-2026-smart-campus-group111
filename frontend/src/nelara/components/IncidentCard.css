@@ -1,0 +1,87 @@
+.incident-card {
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  border: 1px solid #e2e8f0;
+}
+
+.incident-card-header {
+  padding: 1rem;
+  display: flex;
+  justify-content: space-between;
+  background: #f8fafc;
+}
+
+.priority-tag, .status-tag {
+  font-size: 0.7rem;
+  font-weight: 800;
+  padding: 0.2rem 0.5rem;
+  border-radius: 4px;
+  text-transform: uppercase;
+}
+
+.priority-tag.low { background: #c6f6d5; color: #22543d; }
+.priority-tag.medium { background: #fefcbf; color: #744210; }
+.priority-tag.high { background: #feebc8; color: #9c4221; }
+.priority-tag.urgent { background: #fed7d7; color: #822727; }
+
+.status-tag.open { border: 1px solid #4299e1; color: #2b6cb0; }
+.status-tag.in-progress { border: 1px solid #ecc94b; color: #975a16; }
+.status-tag.resolved { border: 1px solid #48bb78; color: #22543d; }
+
+.incident-card-body {
+  padding: 1.5rem;
+  flex: 1;
+}
+
+.incident-card-body h3 {
+  margin: 0 0 0.5rem 0;
+  color: #1a202c;
+}
+
+.location {
+  font-size: 0.85rem;
+  color: #718096;
+  margin-bottom: 1rem;
+}
+
+.description {
+  font-size: 0.95rem;
+  color: #4a5568;
+}
+
+.incident-card-footer {
+  padding: 1rem;
+  background: #f8fafc;
+  border-top: 1px solid #e2e8f0;
+}
+
+.technician-info {
+  font-size: 0.8rem;
+  color: #4a5568;
+  margin-bottom: 0.75rem;
+}
+
+.actions {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.actions button {
+  flex: 1;
+  padding: 0.5rem;
+  font-size: 0.75rem;
+  font-weight: 700;
+  cursor: pointer;
+  border-radius: 6px;
+  border: 1px solid #cbd5e0;
+  background: white;
+  transition: all 0.2s;
+}
+
+.actions button:hover {
+  background: #edf2f7;
+}
