@@ -34,6 +34,15 @@ const NotificationBell = ({ userId }) => {
     }
   };
 
+  const markAllAsRead = async () => {
+    try {
+      await fetch(`http://localhost:8080/api/notifications/user/${userId}/read-all`, { method: 'PATCH' });
+      fetchNotifications();
+    } catch (error) {
+      console.error('Error marking all as read:', error);
+    }
+  };
+
   return (
     <div className="notification-bell-container">
       <div className="bell-icon" onClick={() => setIsOpen(!isOpen)}>
@@ -45,7 +54,10 @@ const NotificationBell = ({ userId }) => {
         <div className="notification-dropdown">
           <div className="dropdown-header">
             <h3>Notifications</h3>
-            <button onClick={() => setIsOpen(false)}>Close</button>
+            {unreadCount > 0 && (
+              <button className="btn-mark-all" onClick={markAllAsRead}>Mark all read</button>
+            )}
+            <button className="btn-close" onClick={() => setIsOpen(false)}>✕</button>
           </div>
           <div className="notification-list">
             {notifications.length > 0 ? (
