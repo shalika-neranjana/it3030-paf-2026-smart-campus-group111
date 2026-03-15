@@ -1,6 +1,7 @@
 package com.unireserver.backend.controller;
 
 import com.unireserver.backend.model.Facility;
+import com.unireserver.backend.model.FacilityStatus;
 import com.unireserver.backend.model.FacilityType;
 import com.unireserver.backend.repository.FacilityRepository;
 import com.unireserver.backend.service.FacilityService;
@@ -22,9 +23,10 @@ public class FacilityController {
     public List<Facility> getAllFacilities(
             @RequestParam(required = false) FacilityType type,
             @RequestParam(required = false) Integer minCapacity,
-            @RequestParam(required = false) String location) {
-        if (type != null || minCapacity != null || location != null) {
-            return facilityService.searchFacilities(type, minCapacity, location);
+            @RequestParam(required = false) String location,
+            @RequestParam(required = false) FacilityStatus status) {
+        if (type != null || minCapacity != null || location != null || status != null) {
+            return facilityService.searchFacilities(type, minCapacity, location, status);
         }
         return facilityService.getAllFacilities();
     }

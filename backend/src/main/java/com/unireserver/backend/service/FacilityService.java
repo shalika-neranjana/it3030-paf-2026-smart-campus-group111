@@ -1,6 +1,7 @@
 package com.unireserver.backend.service;
 
 import com.unireserver.backend.model.Facility;
+import com.unireserver.backend.model.FacilityStatus;
 import com.unireserver.backend.model.FacilityType;
 import com.unireserver.backend.repository.FacilityRepository;
 import lombok.RequiredArgsConstructor;
@@ -46,13 +47,14 @@ public class FacilityService {
         facilityRepository.deleteById(id);
     }
 
-    public List<Facility> searchFacilities(FacilityType type, Integer minCapacity, String location) {
+    public List<Facility> searchFacilities(FacilityType type, Integer minCapacity, String location, FacilityStatus status) {
         List<Facility> facilities = facilityRepository.findAll();
 
         return facilities.stream()
                 .filter(f -> type == null || f.getType() == type)
                 .filter(f -> minCapacity == null || f.getCapacity() >= minCapacity)
                 .filter(f -> location == null || location.isEmpty() || f.getLocation().toLowerCase().contains(location.toLowerCase()))
+                .filter(f -> status == null || f.getStatus() == status)
                 .collect(Collectors.toList());
     }
 }

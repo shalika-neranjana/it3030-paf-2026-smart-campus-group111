@@ -3,6 +3,8 @@ import { Link, useNavigate } from 'react-router-dom'
 import { CalendarClock, ClipboardList, Inbox, LayoutDashboard, LifeBuoy, Wrench } from 'lucide-react'
 import { api, resolveApiUrl } from '../lib/api'
 
+import ManageResources from './ManageResources'
+
 const ADMIN_NAV_ITEMS = [
   { key: 'inbox-messages', label: 'Inbox Messages', icon: Inbox },
   { key: 'booking-requests', label: 'Booking Requests', icon: ClipboardList },
@@ -27,7 +29,8 @@ const formatRole = (role) => {
 
 const isAdminRole = (role) => {
   if (!role) return false
-  return role.toUpperCase() === 'ADMINISTRATOR'
+  const r = role.toUpperCase()
+  return r === 'ADMINISTRATOR' || r === 'MANAGER'
 }
 
 const DashboardPage = () => {
@@ -73,6 +76,34 @@ const DashboardPage = () => {
     localStorage.removeItem('authUser')
     window.dispatchEvent(new Event('auth-changed'))
     navigate('/login', { replace: true })
+  }
+
+  const renderActiveSection = () => {
+    switch (activeSection) {
+      case 'manage-resources':
+        return <ManageResources />
+      case 'overview':
+      default:
+        return (
+          <section className="dashboard-hero" style={{ height: '100%' }}>
+            <p className="eyebrow">Dashboard</p>
+            <h1>{navItems.find((item) => item.key === activeSection)?.label || 'Welcome to UniReserver'}</h1>
+            <p className="subtitle">
+              Manage your campus reservations from one place. Your account summary is shown in the header for quick access.
+            </p>
+            <div className="feature-strip" style={{ marginTop: '2rem' }}>
+              <div className="feature-card">
+                <h2>Quick Start</h2>
+                <p>Use the sidebar to navigate through your management tools.</p>
+              </div>
+              <div className="feature-card">
+                <h2>Notifications</h2>
+                <p>You have no new notifications at this time.</p>
+              </div>
+            </div>
+          </section>
+        )
+    }
   }
 
   return (
@@ -127,13 +158,9 @@ const DashboardPage = () => {
           </nav>
         </aside>
 
-        <section className="dashboard-hero">
-          <p className="eyebrow">Dashboard</p>
-          <h1>{navItems.find((item) => item.key === activeSection)?.label || 'Welcome to UniReserver'}</h1>
-          <p className="subtitle">
-            Manage your campus reservations from one place. Your account summary is shown in the header for quick access.
-          </p>
-        </section>
+        <div className="dashboard-main-content" style={{ flex: 1 }}>
+          {renderActiveSection()}
+        </div>
       </main>
     </div>
   )
