@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { CalendarClock, ClipboardList, Inbox, LayoutDashboard, LifeBuoy, Wrench } from 'lucide-react'
 import { api, resolveApiUrl } from '../lib/api'
+import ManageFacilities from './ManageFacilities'
 
 const ADMIN_NAV_ITEMS = [
   { key: 'inbox-messages', label: 'Inbox Messages', icon: Inbox },
@@ -25,9 +26,10 @@ const formatRole = (role) => {
     .join(' ')
 }
 
-const isAdminRole = (role) => {
+const isManagementRole = (role) => {
   if (!role) return false
-  return role.toUpperCase() === 'ADMINISTRATOR'
+  const r = role.toUpperCase()
+  return r === 'ADMINISTRATOR' || r === 'MANAGER'
 }
 
 const DashboardPage = () => {
@@ -61,7 +63,7 @@ const DashboardPage = () => {
   const displayName = [user?.firstName, user?.lastName].filter(Boolean).join(' ') || 'Logged in user'
   const displayRole = formatRole(user?.role)
   const profileImage = resolveApiUrl(user?.imageUrl) || '/logo.png'
-  const navItems = isAdminRole(user?.role) ? ADMIN_NAV_ITEMS : DEFAULT_NAV_ITEMS
+  const navItems = isManagementRole(user?.role) ? ADMIN_NAV_ITEMS : DEFAULT_NAV_ITEMS
   const [activeSection, setActiveSection] = useState(() => navItems[0]?.key || 'overview')
 
   useEffect(() => {
@@ -133,6 +135,12 @@ const DashboardPage = () => {
           <p className="subtitle">
             Manage your campus reservations from one place. Your account summary is shown in the header for quick access.
           </p>
+
+          {activeSection === 'manage-resources' && (
+            <div className="dashboard-section-content">
+              <ManageFacilities />
+            </div>
+          )}
         </section>
       </main>
     </div>
