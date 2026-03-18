@@ -2,6 +2,15 @@ import React, { useState, useEffect } from 'react';
 import './NotificationBell.css';
 
 const NotificationBell = ({ userId }) => {
+  const getTypeIcon = (type) => {
+    switch(type) {
+      case 'BOOKING_APPROVED': return '✅';
+      case 'BOOKING_REJECTED': return '❌';
+      case 'MAINTENANCE_UPDATE': return '🔧';
+      case 'SYSTEM_ALERT': return '⚠️';
+      default: return '🔔';
+    }
+  };
   const [notifications, setNotifications] = useState([]);
   const [isOpen, setIsOpen] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
@@ -67,8 +76,13 @@ const NotificationBell = ({ userId }) => {
                   className={`notification-item ${n.isRead ? 'read' : 'unread'}`}
                   onClick={() => markAsRead(n.id)}
                 >
-                  <p>{n.message}</p>
-                  <span className="time">{new Date(n.createdAt).toLocaleString()}</span>
+                  <div className="notification-content">
+                    <span className="type-icon">{getTypeIcon(n.type)}</span>
+                    <div className="text-wrapper">
+                      <p>{n.message}</p>
+                      <span className="time">{new Date(n.createdAt).toLocaleString()}</span>
+                    </div>
+                  </div>
                 </div>
               ))
             ) : (
