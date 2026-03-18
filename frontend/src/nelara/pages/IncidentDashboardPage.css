@@ -1,0 +1,48 @@
+.incident-dashboard {
+  padding: 2.5rem;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 3rem;
+}
+
+.page-header h1 {
+  font-size: 2.5rem;
+  color: #1a202c;
+  margin: 0;
+}
+
+.btn-report {
+  background-color: #3182ce;
+  color: white;
+  padding: 0.75rem 1.5rem;
+  border: none;
+  border-radius: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 0 4px 6px -1px rgba(66, 153, 225, 0.4);
+  transition: all 0.2s;
+}
+
+.btn-report:hover {
+  background-color: #2b6cb0;
+  transform: translateY(-2px);
+}
+
+.incident-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 2rem;
+}
+
+.loading, .no-tickets {
+  text-align: center;
+  padding: 5rem;
+  color: #718096;
+  font-size: 1.25rem;
+}
