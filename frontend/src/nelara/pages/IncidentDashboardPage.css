@@ -17,6 +17,21 @@
   margin: 0;
 }
 
+.header-actions {
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+}
+
+.category-filter {
+  padding: 0.75rem 1rem;
+  border-radius: 12px;
+  border: 1px solid #e2e8f0;
+  background-color: white;
+  font-weight: 600;
+  color: #4a5568;
+}
+
 .btn-report {
   background-color: #3182ce;
   color: white;

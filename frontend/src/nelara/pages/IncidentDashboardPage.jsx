@@ -61,9 +61,24 @@ const IncidentDashboardPage = () => {
     <div className="incident-dashboard">
       <header className="page-header">
         <h1>Maintenance & Incidents</h1>
-        <button className="btn-report" onClick={() => setIsFormOpen(true)}>
-          Report Issue
-        </button>
+        <div className="header-actions">
+          <select 
+            onChange={(e) => {
+              // Mock filter logic
+              fetchIncidents();
+            }}
+            className="category-filter"
+          >
+            <option value="">All Categories</option>
+            <option value="Plumbing">Plumbing</option>
+            <option value="Electrical">Electrical</option>
+            <option value="IT">IT Infrastructure</option>
+            <option value="Furniture">Furniture</option>
+          </select>
+          <button className="btn-report" onClick={() => setIsFormOpen(true)}>
+            Report Issue
+          </button>
+        </div>
       </header>
 
       {loading ? (
