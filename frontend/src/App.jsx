@@ -8,6 +8,7 @@ import RegisterPage from './pages/RegisterPage'
 import ResourceManagementPage from './neranjana/pages/ResourceManagementPage'
 import BookingManagementPage from './kasun/pages/BookingManagementPage'
 import IncidentDashboardPage from './nelara/pages/IncidentDashboardPage'
+import NotificationPage from './shalika/pages/NotificationPage'
 
 const hasAuthToken = () => Boolean(localStorage.getItem('authToken'))
 
@@ -48,6 +49,10 @@ const App = () => {
       <Route
         path="/incidents"
         element={isAuthenticated ? <IncidentDashboardPage /> : <Navigate to="/login" replace />}
+      />
+      <Route
+        path="/notifications"
+        element={isAuthenticated ? <NotificationPage /> : <Navigate to="/login" replace />}
       />
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
