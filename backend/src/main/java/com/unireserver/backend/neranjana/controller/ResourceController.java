@@ -1,7 +1,9 @@
 package com.unireserver.backend.neranjana.controller;
 
+import com.unireserver.backend.neranjana.dto.ResourceRequest;
 import com.unireserver.backend.neranjana.model.Resource;
 import com.unireserver.backend.neranjana.service.ResourceService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -42,13 +44,31 @@ public class ResourceController {
     }
 
     @PostMapping
-    public ResponseEntity<Resource> createResource(@RequestBody Resource resource) {
+    public ResponseEntity<Resource> createResource(@Valid @RequestBody ResourceRequest request) {
+        Resource resource = Resource.builder()
+                .name(request.getName())
+                .type(request.getType())
+                .capacity(request.getCapacity())
+                .location(request.getLocation())
+                .description(request.getDescription())
+                .status(request.getStatus())
+                .availabilityWindows(request.getAvailabilityWindows())
+                .build();
         return new ResponseEntity<>(resourceService.createResource(resource), HttpStatus.CREATED);
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<Resource> updateResource(@PathVariable String id, @RequestBody Resource resource) {
+    public ResponseEntity<Resource> updateResource(@PathVariable String id, @Valid @RequestBody ResourceRequest request) {
         try {
+            Resource resource = Resource.builder()
+                    .name(request.getName())
+                    .type(request.getType())
+                    .capacity(request.getCapacity())
+                    .location(request.getLocation())
+                    .description(request.getDescription())
+                    .status(request.getStatus())
+                    .availabilityWindows(request.getAvailabilityWindows())
+                    .build();
             return ResponseEntity.ok(resourceService.updateResource(id, resource));
         } catch (RuntimeException e) {
             return ResponseEntity.notFound().build();
