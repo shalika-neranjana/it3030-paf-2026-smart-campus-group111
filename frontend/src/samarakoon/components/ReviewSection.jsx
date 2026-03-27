@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import ReviewCard from './ReviewCard';
+import ReviewStats from './ReviewStats';
 import './ReviewSection.css';
 
 const ReviewSection = ({ resourceId }) => {
@@ -39,6 +40,8 @@ const ReviewSection = ({ resourceId }) => {
     <div className="review-section">
       <h3>Community Reviews</h3>
       
+      <ReviewStats reviews={reviews} />
+
       <form onSubmit={handleSubmit} className="review-form">
         <div className="rating-select">
           {[1, 2, 3, 4, 5].map(num => (
