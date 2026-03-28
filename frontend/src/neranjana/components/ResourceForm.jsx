@@ -98,6 +98,68 @@ const ResourceForm = ({ resource, onSubmit, onCancel }) => {
           </select>
         </div>
 
+        <div className="form-group">
+          <label>Availability Windows</label>
+          {formData.availabilityWindows?.map((window, index) => (
+            <div key={index} className="availability-row">
+              <select 
+                value={window.dayOfWeek} 
+                onChange={(e) => {
+                  const newWindows = [...formData.availabilityWindows];
+                  newWindows[index].dayOfWeek = e.target.value;
+                  setFormData({...formData, availabilityWindows: newWindows});
+                }}
+              >
+                <option value="Monday">Monday</option>
+                <option value="Tuesday">Tuesday</option>
+                <option value="Wednesday">Wednesday</option>
+                <option value="Thursday">Thursday</option>
+                <option value="Friday">Friday</option>
+                <option value="Saturday">Saturday</option>
+                <option value="Sunday">Sunday</option>
+              </select>
+              <input 
+                type="time" 
+                value={window.startTime} 
+                onChange={(e) => {
+                  const newWindows = [...formData.availabilityWindows];
+                  newWindows[index].startTime = e.target.value;
+                  setFormData({...formData, availabilityWindows: newWindows});
+                }}
+              />
+              <input 
+                type="time" 
+                value={window.endTime} 
+                onChange={(e) => {
+                  const newWindows = [...formData.availabilityWindows];
+                  newWindows[index].endTime = e.target.value;
+                  setFormData({...formData, availabilityWindows: newWindows});
+                }}
+              />
+              <button 
+                type="button" 
+                className="btn-remove"
+                onClick={() => {
+                  const newWindows = formData.availabilityWindows.filter((_, i) => i !== index);
+                  setFormData({...formData, availabilityWindows: newWindows});
+                }}
+              >
+                &times;
+              </button>
+            </div>
+          ))}
+          <button 
+            type="button" 
+            className="btn-add-window"
+            onClick={() => {
+              const newWindows = [...(formData.availabilityWindows || []), { dayOfWeek: 'Monday', startTime: '08:00', endTime: '17:00' }];
+              setFormData({...formData, availabilityWindows: newWindows});
+            }}
+          >
+            + Add Availability Window
+          </button>
+        </div>
+
         <div className="form-actions">
           <button type="submit" className="btn-submit">
             {resource ? 'Update' : 'Create'}

@@ -102,3 +102,46 @@
 .btn-cancel:hover {
   background-color: #e2e8f0;
 }
+
+.availability-row {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+  align-items: center;
+}
+
+.availability-row select, 
+.availability-row input {
+  flex: 1;
+}
+
+.btn-remove {
+  background: #feb2b2;
+  color: #c53030;
+  border: none;
+  border-radius: 4px;
+  width: 30px;
+  height: 30px;
+  font-size: 1.25rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.btn-add-window {
+  background: none;
+  border: 1px dashed #cbd5e0;
+  color: #4a5568;
+  width: 100%;
+  padding: 0.5rem;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.875rem;
+  margin-top: 0.5rem;
+}
+
+.btn-add-window:hover {
+  background-color: #f7fafc;
+  border-color: #a0aec0;
+}
