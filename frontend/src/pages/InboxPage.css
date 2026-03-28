@@ -98,18 +98,39 @@
   color: #888;
 }
 
-.delete-message-btn {
+.delete-message-btn, .mark-read-btn {
   opacity: 0;
   background: none;
   border: none;
-  color: #ff4757;
   cursor: pointer;
   padding: 0.5rem;
-  transition: opacity 0.2s;
+  transition: opacity 0.2s, transform 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
-.message-item:hover .delete-message-btn {
+.delete-message-btn {
+  color: #ff4757;
+}
+
+.mark-read-btn {
+  color: #2ed573;
+}
+
+.message-item:hover .delete-message-btn,
+.message-item:hover .mark-read-btn {
   opacity: 1;
+}
+
+.delete-message-btn:hover, .mark-read-btn:hover {
+  transform: scale(1.1);
+}
+
+.message-actions {
+  display: flex;
+  gap: 0.25rem;
+  margin-left: auto;
 }
 
 .message-detail {

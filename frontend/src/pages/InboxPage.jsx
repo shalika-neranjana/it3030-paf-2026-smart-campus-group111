@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import { api } from '../lib/api'
 import ReactMarkdown from 'react-markdown'
-import { Mail, MailOpen, Trash2, Clock, User } from 'lucide-react'
+import { Mail, MailOpen, Trash2, Clock, User, CheckCircle } from 'lucide-react'
 import './InboxPage.css'
 
 const InboxPage = ({ onMessageRead }) => {
@@ -35,6 +35,19 @@ const InboxPage = ({ onMessageRead }) => {
       } catch (error) {
         console.error('Failed to mark message as read:', error)
       }
+    }
+  }
+
+  const handleMarkAsRead = async (e, message) => {
+    e.stopPropagation()
+    if (message.read) return
+    try {
+      await api.patch(`/api/messages/${message.id}/read`)
+      // Update local state
+      setMessages(messages.map(m => m.id === message.id ? { ...m, read: true, readAt: new Date().toISOString() } : m))
+      if (onMessageRead) onMessageRead()
+    } catch (error) {
+      console.error('Failed to mark message as read:', error)
     }
   }
 
@@ -77,9 +90,16 @@ const InboxPage = ({ onMessageRead }) => {
                   <div className="message-title">{message.title}</div>
                   <div className="message-date">{new Date(message.sentAt).toLocaleDateString()}</div>
                 </div>
-                <button className="delete-message-btn" onClick={(e) => handleDeleteMessage(e, message.id)} title="Delete message">
-                  <Trash2 size={16} />
-                </button>
+                <div className="message-actions">
+                  {!message.read && (
+                    <button className="mark-read-btn" onClick={(e) => handleMarkAsRead(e, message)} title="Mark as read">
+                      <CheckCircle size={16} />
+                    </button>
+                  )}
+                  <button className="delete-message-btn" onClick={(e) => handleDeleteMessage(e, message.id)} title="Delete message">
+                    <Trash2 size={16} />
+                  </button>
+                </div>
               </div>
             ))
           )}
