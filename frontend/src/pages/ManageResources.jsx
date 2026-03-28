@@ -9,6 +9,7 @@ import {
   AlertCircle
 } from 'lucide-react'
 import { api } from '../lib/api'
+import BookingModal from './BookingModal'
 
 const FACILITY_TYPES = ['LECTURE_HALL', 'LAB', 'MEETING_ROOM', 'EQUIPMENT', 'SPECIAL']
 const FACILITY_STATUSES = ['ACTIVE', 'OUT_OF_SERVICE']
@@ -37,6 +38,10 @@ const ManageResources = ({ isReadOnly = false }) => {
     description: '',
     imageUrl: ''
   })
+
+  // Booking Modal state
+  const [isBookingModalOpen, setIsBookingModalOpen] = useState(false)
+  const [selectedFacilityForBooking, setSelectedFacilityForBooking] = useState(null)
 
   const fetchFacilities = async () => {
     setLoading(true)
@@ -135,6 +140,11 @@ const ManageResources = ({ isReadOnly = false }) => {
       alert('Failed to delete resource.')
       console.error(err)
     }
+  }
+
+  const handleOpenBookingModal = (facility) => {
+    setSelectedFacilityForBooking(facility)
+    setIsBookingModalOpen(true)
   }
 
   return (
@@ -251,7 +261,13 @@ const ManageResources = ({ isReadOnly = false }) => {
                   </td>
                   <td>
                     <div className="table-actions">
-                      <button className="ghost-btn" style={{ padding: '0.4rem 0.8rem', fontSize: '0.8rem' }}>Reserve</button>
+                      <button 
+                        className="ghost-btn" 
+                        style={{ padding: '0.4rem 0.8rem', fontSize: '0.8rem' }}
+                        onClick={() => handleOpenBookingModal(facility)}
+                      >
+                        Reserve
+                      </button>
                       {!isReadOnly && (
                         <>
                           <button className="icon-btn" onClick={() => handleOpenModal(facility)}>
@@ -341,6 +357,16 @@ const ManageResources = ({ isReadOnly = false }) => {
           </div>
         </div>
       )}
+
+      {/* Booking Request Modal */}
+      <BookingModal 
+        isOpen={isBookingModalOpen}
+        onClose={() => setIsBookingModalOpen(false)}
+        facility={selectedFacilityForBooking}
+        onSuccess={() => {
+          alert('Booking request submitted successfully! You can track its status in your dashboard.')
+        }}
+      />
     </div>
   )
 }

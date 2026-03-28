@@ -4,6 +4,7 @@ import { CalendarClock, ClipboardList, Inbox, LayoutDashboard, LifeBuoy, Wrench 
 import { api, resolveApiUrl } from '../lib/api'
 
 import ManageResources from './ManageResources'
+import BookingManagement from './BookingManagement'
 
 const ADMIN_NAV_ITEMS = [
   { key: 'inbox-messages', label: 'Inbox Messages', icon: Inbox },
@@ -16,6 +17,7 @@ const ADMIN_NAV_ITEMS = [
 const DEFAULT_NAV_ITEMS = [
   { key: 'overview', label: 'Overview', icon: LayoutDashboard },
   { key: 'view-resources', label: 'View Resources', icon: ClipboardList },
+  { key: 'my-bookings', label: 'My Reservations', icon: CalendarClock },
 ]
 
 const formatRole = (role) => {
@@ -85,6 +87,10 @@ const DashboardPage = () => {
         return <ManageResources isReadOnly={false} />
       case 'view-resources':
         return <ManageResources isReadOnly={true} />
+      case 'booking-requests':
+        return <BookingManagement mode="all" />
+      case 'my-bookings':
+        return <BookingManagement mode="my" />
       case 'overview':
       default:
         return (
