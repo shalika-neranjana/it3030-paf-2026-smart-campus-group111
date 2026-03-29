@@ -2,6 +2,7 @@ package com.unireserver.backend.kasun.service;
 
 import com.unireserver.backend.kasun.model.Booking;
 import com.unireserver.backend.kasun.repository.BookingRepository;
+import com.unireserver.backend.kasun.exception.BookingNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -40,7 +41,7 @@ public class BookingService {
 
     public Booking updateBookingStatus(String id, Booking.BookingStatus status, String reason) {
         Booking booking = bookingRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Booking not found"));
+                .orElseThrow(() -> new BookingNotFoundException("Booking not found with id: " + id));
         
         booking.setStatus(status);
         if (reason != null) {
@@ -65,7 +66,7 @@ public class BookingService {
 
     public void cancelBooking(String id) {
         Booking booking = bookingRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Booking not found"));
+                .orElseThrow(() -> new BookingNotFoundException("Booking not found with id: " + id));
         booking.setStatus(Booking.BookingStatus.CANCELLED);
         booking.setUpdatedAt(Instant.now());
         bookingRepository.save(booking);
