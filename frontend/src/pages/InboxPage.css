@@ -98,39 +98,53 @@
   color: #888;
 }
 
-.delete-message-btn, .mark-read-btn {
-  opacity: 0;
-  background: none;
-  border: none;
-  cursor: pointer;
-  padding: 0.5rem;
-  transition: opacity 0.2s, transform 0.2s;
+.message-detail-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 1rem;
+}
+
+.message-detail-actions {
+  display: flex;
+  gap: 0.75rem;
+  flex-shrink: 0;
+}
+
+.action-btn {
   display: flex;
   align-items: center;
-  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.5rem 0.85rem;
+  border-radius: 10px;
+  border: 1px solid #ddd;
+  background: white;
+  font-size: 0.82rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s;
 }
 
-.delete-message-btn {
-  color: #ff4757;
+.action-btn.mark-read {
+  color: #26a356;
+  border-color: #c6f6d5;
+  background: #f0fff4;
 }
 
-.mark-read-btn {
-  color: #2ed573;
+.action-btn.mark-read:hover {
+  background: #dcffe4;
+  transform: translateY(-1px);
 }
 
-.message-item:hover .delete-message-btn,
-.message-item:hover .mark-read-btn {
-  opacity: 1;
+.action-btn.delete {
+  color: #d63031;
+  border-color: #fab1a0;
+  background: #fff5f6;
 }
 
-.delete-message-btn:hover, .mark-read-btn:hover {
-  transform: scale(1.1);
-}
-
-.message-actions {
-  display: flex;
-  gap: 0.25rem;
-  margin-left: auto;
+.action-btn.delete:hover {
+  background: #ffebeb;
+  transform: translateY(-1px);
 }
 
 .message-detail {

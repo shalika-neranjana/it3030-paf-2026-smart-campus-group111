@@ -90,16 +90,6 @@ const InboxPage = ({ onMessageRead }) => {
                   <div className="message-title">{message.title}</div>
                   <div className="message-date">{new Date(message.sentAt).toLocaleDateString()}</div>
                 </div>
-                <div className="message-actions">
-                  {!message.read && (
-                    <button className="mark-read-btn" onClick={(e) => handleMarkAsRead(e, message)} title="Mark as read">
-                      <CheckCircle size={16} />
-                    </button>
-                  )}
-                  <button className="delete-message-btn" onClick={(e) => handleDeleteMessage(e, message.id)} title="Delete message">
-                    <Trash2 size={16} />
-                  </button>
-                </div>
               </div>
             ))
           )}
@@ -109,7 +99,19 @@ const InboxPage = ({ onMessageRead }) => {
         {selectedMessage ? (
           <div className="message-content">
             <div className="message-detail-header">
-              <h3>{selectedMessage.title}</h3>
+              <div className="message-detail-top">
+                <h3>{selectedMessage.title}</h3>
+                <div className="message-detail-actions">
+                  {!selectedMessage.read && (
+                    <button className="action-btn mark-read" onClick={(e) => handleMarkAsRead(e, selectedMessage)}>
+                      <CheckCircle size={18} /> Mark as Read
+                    </button>
+                  )}
+                  <button className="action-btn delete" onClick={(e) => handleDeleteMessage(e, selectedMessage.id)}>
+                    <Trash2 size={18} /> Delete
+                  </button>
+                </div>
+              </div>
               <div className="message-meta">
                 <span className="meta-item"><User size={14} /> {selectedMessage.senderId || 'System'}</span>
                 <span className="meta-item"><Clock size={14} /> {new Date(selectedMessage.sentAt).toLocaleString()}</span>
