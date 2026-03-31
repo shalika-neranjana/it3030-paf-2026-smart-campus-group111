@@ -42,6 +42,17 @@ const ReviewSection = ({ resourceId }) => {
       
       <ReviewStats reviews={reviews} />
 
+      <div className="list-header">
+        <h4>Recent Feedback</h4>
+        <select onChange={(e) => {
+          // Mock sort
+          fetchReviews();
+        }}>
+          <option value="newest">Newest First</option>
+          <option value="highest">Highest Rating</option>
+        </select>
+      </div>
+
       <form onSubmit={handleSubmit} className="review-form">
         <div className="rating-select">
           {[1, 2, 3, 4, 5].map(num => (
