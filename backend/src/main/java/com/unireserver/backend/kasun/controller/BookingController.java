@@ -1,7 +1,9 @@
 package com.unireserver.backend.kasun.controller;
 
+import com.unireserver.backend.kasun.dto.BookingRequest;
 import com.unireserver.backend.kasun.model.Booking;
 import com.unireserver.backend.kasun.service.BookingService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -36,8 +38,17 @@ public class BookingController {
     }
 
     @PostMapping
-    public ResponseEntity<?> createBooking(@RequestBody Booking booking) {
+    public ResponseEntity<?> createBooking(@Valid @RequestBody BookingRequest request) {
         try {
+            Booking booking = Booking.builder()
+                    .resourceId(request.getResourceId())
+                    .userId(request.getUserId())
+                    .bookingDate(request.getBookingDate())
+                    .startTime(request.getStartTime())
+                    .endTime(request.getEndTime())
+                    .purpose(request.getPurpose())
+                    .expectedAttendees(request.getExpectedAttendees())
+                    .build();
             return new ResponseEntity<>(bookingService.createBooking(booking), HttpStatus.CREATED);
         } catch (RuntimeException e) {
             return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of("error", e.getMessage()));
