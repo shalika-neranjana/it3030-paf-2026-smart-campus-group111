@@ -45,6 +45,11 @@ public class BookingController {
         return bookingService.getAllBookings();
     }
 
+    @GetMapping("/facility/{facilityId}")
+    public List<BookingResponse> getBookingsForFacility(@PathVariable String facilityId) {
+        return bookingService.getBookingsForFacility(facilityId);
+    }
+
     @PutMapping("/{id}/approve")
     @PreAuthorize("hasAuthority('ROLE_ADMINISTRATOR') or hasAuthority('ROLE_MANAGER')")
     public Booking approveBooking(@PathVariable String id) {
