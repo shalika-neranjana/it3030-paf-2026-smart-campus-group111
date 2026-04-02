@@ -42,9 +42,27 @@
   background: #f8fafc;
 }
 
-.dropdown-header h3 {
-  margin: 0;
-  font-size: 1rem;
+.btn-mark-all {
+  font-size: 0.75rem;
+  color: #3b82f6;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  margin-right: 0.5rem;
+}
+
+.btn-mark-all:hover {
+  text-decoration: underline;
+}
+
+.btn-close {
+  background: none;
+  border: none;
+  font-size: 1.2rem;
+  color: #94a3b8;
+  cursor: pointer;
+  padding: 0;
 }
 
 .notification-list {
