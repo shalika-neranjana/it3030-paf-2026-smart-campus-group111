@@ -1,7 +1,9 @@
 package com.unireserver.backend.nelara.controller;
 
+import com.unireserver.backend.nelara.dto.IncidentRequest;
 import com.unireserver.backend.nelara.model.Incident;
 import com.unireserver.backend.nelara.service.IncidentService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -31,7 +33,14 @@ public class IncidentController {
     }
 
     @PostMapping
-    public ResponseEntity<Incident> createIncident(@RequestBody Incident incident) {
+    public ResponseEntity<Incident> createIncident(@Valid @RequestBody IncidentRequest request) {
+        Incident incident = Incident.builder()
+                .reporterId(request.getReporterId())
+                .category(request.getCategory())
+                .description(request.getDescription())
+                .priority(request.getPriority())
+                .location(request.getLocation())
+                .build();
         return new ResponseEntity<>(incidentService.createIncident(incident), HttpStatus.CREATED);
     }
 
