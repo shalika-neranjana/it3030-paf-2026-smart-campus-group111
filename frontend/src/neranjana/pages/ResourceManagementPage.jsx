@@ -3,6 +3,7 @@ import ResourceCard from '../components/ResourceCard';
 import ResourceForm from '../components/ResourceForm';
 import ResourceStats from '../components/ResourceStats';
 import LoadingSpinner from '../components/LoadingSpinner';
+import ReviewSection from '../../samarakoon/components/ReviewSection';
 import './ResourceManagementPage.css';
 
 const ResourceManagementPage = () => {
@@ -152,6 +153,8 @@ const ResourceManagementPage = () => {
           }}
         />
       )}
+
+      <ReviewSection resourceId="general" />
     </div>
   );
 };
