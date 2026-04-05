@@ -24,7 +24,15 @@ const NotificationPage = ({ userId }) => {
 
   return (
     <div className="notification-page">
-      <h1>All Notifications</h1>
+      <div className="header">
+        <h1>All Notifications</h1>
+        <select onChange={(e) => fetchNotifications()}>
+          <option value="">All Types</option>
+          <option value="BOOKING_APPROVED">Bookings</option>
+          <option value="MAINTENANCE_UPDATE">Maintenance</option>
+          <option value="SYSTEM_ALERT">Alerts</option>
+        </select>
+      </div>
       {loading ? (
         <p>Loading...</p>
       ) : (
