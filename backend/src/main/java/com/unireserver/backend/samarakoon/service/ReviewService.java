@@ -50,4 +50,10 @@ public class ReviewService {
         review.getResponses().add(response);
         return reviewRepository.save(review);
     }
+
+    public double getAverageRating(String resourceId) {
+        List<Review> reviews = reviewRepository.findByResourceIdOrderByCreatedAtDesc(resourceId);
+        if (reviews.isEmpty()) return 0.0;
+        return reviews.stream().mapToInt(Review::getRating).average().orElse(0.0);
+    }
 }
