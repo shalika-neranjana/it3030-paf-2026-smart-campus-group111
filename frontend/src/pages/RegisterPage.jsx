@@ -152,8 +152,9 @@ const RegisterPage = () => {
       const { data } = await api.post('/api/auth/register', payload)
       localStorage.setItem('authToken', data.token)
       localStorage.setItem('authUser', JSON.stringify(data))
+      window.dispatchEvent(new Event('auth-changed'))
       await showSuccess('Registration successful', 'Your account has been created successfully.')
-      navigate('/login')
+      navigate('/dashboard')
     } catch (error) {
       const message = error?.response?.data?.message || 'Registration failed. Please try again.'
 

@@ -4,9 +4,9 @@ const HomePage = () => {
   return (
     <div className="landing-page">
       <header className="topbar">
-        <a className="brand" href="#" aria-label="UniReserver home">
+        <Link className="brand" to="/" aria-label="UniReserver home">
           <img className="brand-logo" src="/logo.png" alt="UniReserver logo" />
-        </a>
+        </Link>
         <Link className="login-btn" to="/login">
           Login
         </Link>

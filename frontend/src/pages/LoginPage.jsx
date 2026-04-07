@@ -24,8 +24,9 @@ const LoginPage = () => {
       const { data } = await api.post('/api/auth/login', formData)
       localStorage.setItem('authToken', data.token)
       localStorage.setItem('authUser', JSON.stringify(data))
+      window.dispatchEvent(new Event('auth-changed'))
       await showSuccess('Login successful', `Welcome back, ${data.firstName}!`)
-      navigate('/')
+      navigate('/dashboard')
     } catch (error) {
       const status = error?.response?.status
       const message = error?.response?.data?.message || 'Unable to log in. Please try again.'
