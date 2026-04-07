@@ -1,7 +1,18 @@
 import { useEffect, useState } from 'react'
+import { Link, useNavigate } from 'react-router-dom'
+import { CalendarClock, ClipboardList, Inbox, LayoutDashboard, Wrench } from 'lucide-react'
 import { api, resolveApiUrl } from '../lib/api'
-import { useNavigate } from 'react-router-dom'
-import { Link } from 'react-router-dom'
+
+const ADMIN_NAV_ITEMS = [
+  { key: 'inbox-messages', label: 'Inbox Messages', icon: Inbox },
+  { key: 'booking-requests', label: 'Booking Requests', icon: ClipboardList },
+  { key: 'timetable', label: 'Timetable', icon: CalendarClock },
+  { key: 'manage-resources', label: 'Manage Resources', icon: Wrench },
+]
+
+const DEFAULT_NAV_ITEMS = [
+  { key: 'overview', label: 'Overview', icon: LayoutDashboard },
+]
 
 const formatRole = (role) => {
   if (!role) return 'User'
@@ -11,6 +22,11 @@ const formatRole = (role) => {
     .split('_')
     .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
     .join(' ')
+}
+
+const isAdminRole = (role) => {
+  if (!role) return false
+  return role.toUpperCase() === 'ADMINISTRATOR'
 }
 
 const DashboardPage = () => {
@@ -44,6 +60,12 @@ const DashboardPage = () => {
   const displayName = [user?.firstName, user?.lastName].filter(Boolean).join(' ') || 'Logged in user'
   const displayRole = formatRole(user?.role)
   const profileImage = resolveApiUrl(user?.imageUrl) || '/logo.png'
+  const navItems = isAdminRole(user?.role) ? ADMIN_NAV_ITEMS : DEFAULT_NAV_ITEMS
+  const [activeSection, setActiveSection] = useState(() => navItems[0]?.key || 'overview')
+
+  useEffect(() => {
+    setActiveSection(navItems[0]?.key || 'overview')
+  }, [user?.role])
 
   const onLogout = () => {
     localStorage.removeItem('authToken')
@@ -82,9 +104,31 @@ const DashboardPage = () => {
       </header>
 
       <main className="dashboard-content">
+        <aside className="dashboard-sidebar" aria-label="Dashboard navigation">
+          <p className="dashboard-sidebar-title">Navigation</p>
+
+          <nav className="dashboard-nav">
+            {navItems.map((item) => {
+              const Icon = item.icon
+
+              return (
+                <button
+                  key={item.key}
+                  type="button"
+                  className={`dashboard-nav-link ${activeSection === item.key ? 'active' : ''}`}
+                  onClick={() => setActiveSection(item.key)}
+                >
+                  <Icon className="dashboard-nav-icon" size={18} strokeWidth={2.1} aria-hidden="true" />
+                  <span>{item.label}</span>
+                </button>
+              )
+            })}
+          </nav>
+        </aside>
+
         <section className="dashboard-hero">
           <p className="eyebrow">Dashboard</p>
-          <h1>Welcome to UniReserver</h1>
+          <h1>{navItems.find((item) => item.key === activeSection)?.label || 'Welcome to UniReserver'}</h1>
           <p className="subtitle">
             Manage your campus reservations from one place. Your account summary is shown in the header for quick access.
           </p>
