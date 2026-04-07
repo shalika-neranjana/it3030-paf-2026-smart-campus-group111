@@ -1,11 +1,12 @@
 import { useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { CalendarClock, ClipboardList, Inbox, LayoutDashboard, Wrench } from 'lucide-react'
+import { CalendarClock, ClipboardList, Inbox, LayoutDashboard, LifeBuoy, Wrench } from 'lucide-react'
 import { api, resolveApiUrl } from '../lib/api'
 
 const ADMIN_NAV_ITEMS = [
   { key: 'inbox-messages', label: 'Inbox Messages', icon: Inbox },
   { key: 'booking-requests', label: 'Booking Requests', icon: ClipboardList },
+  { key: 'support-tickets', label: 'Support Tickets', icon: LifeBuoy },
   { key: 'timetable', label: 'Timetable', icon: CalendarClock },
   { key: 'manage-resources', label: 'Manage Resources', icon: Wrench },
 ]
