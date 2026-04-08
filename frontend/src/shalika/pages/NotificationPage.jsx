@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import NotificationStats from '../components/NotificationStats';
 import './NotificationPage.css';
 
 const NotificationPage = ({ userId }) => {
@@ -33,6 +34,7 @@ const NotificationPage = ({ userId }) => {
           <option value="SYSTEM_ALERT">Alerts</option>
         </select>
       </div>
+      <NotificationStats notifications={notifications} />
       {loading ? (
         <p>Loading...</p>
       ) : (
