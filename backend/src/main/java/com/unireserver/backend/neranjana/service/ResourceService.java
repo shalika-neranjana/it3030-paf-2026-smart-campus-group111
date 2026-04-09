@@ -3,6 +3,7 @@ package com.unireserver.backend.neranjana.service;
 import com.unireserver.backend.neranjana.model.Resource;
 import com.unireserver.backend.neranjana.repository.ResourceRepository;
 import com.unireserver.backend.neranjana.exception.ResourceNotFoundException;
+import com.unireserver.backend.neranjana.util.SearchUtils;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -57,7 +58,8 @@ public class ResourceService {
         if (keyword == null || keyword.trim().isEmpty()) {
             return resourceRepository.findAll();
         }
-        return resourceRepository.searchResources(keyword);
+        String sanitizedKeyword = SearchUtils.sanitizeKeyword(keyword);
+        return resourceRepository.searchResources(sanitizedKeyword);
     }
 
     public List<Resource> filterResources(String type, Resource.ResourceStatus status) {
