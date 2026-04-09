@@ -10,7 +10,7 @@ import MaintenanceTicketing from './MaintenanceTicketing'
 const ADMIN_NAV_ITEMS = [
   { key: 'inbox-messages', label: 'Inbox Messages', icon: Inbox },
   { key: 'booking-requests', label: 'Booking Requests', icon: ClipboardList },
-  { key: 'support-tickets', label: 'Maintenance Tickets', icon: LifeBuoy },
+  { key: 'support-tickets', label: 'Support Tickets', icon: LifeBuoy },
   { key: 'timetable', label: 'Timetable', icon: CalendarClock },
   { key: 'manage-resources', label: 'Manage Resources', icon: Wrench },
 ]
@@ -19,7 +19,7 @@ const DEFAULT_NAV_ITEMS = [
   { key: 'overview', label: 'Overview', icon: LayoutDashboard },
   { key: 'view-resources', label: 'View Resources', icon: ClipboardList },
   { key: 'my-bookings', label: 'My Reservations', icon: CalendarClock },
-  { key: 'my-tickets', label: 'My Maintenance', icon: LifeBuoy },
+  { key: 'my-tickets', label: 'Support Tickets', icon: LifeBuoy },
 ]
 
 const formatRole = (role) => {

@@ -183,7 +183,7 @@ const MaintenanceTicketing = ({ mode = 'my' }) => {
   return (
     <div className="maintenance-container">
       <div className="maintenance-header">
-        <h1>{mode === 'my' ? 'My Incident Tickets' : 'Maintenance Management'}</h1>
+        <h1>{mode === 'my' ? 'My Support Tickets' : 'Support Ticket Management'}</h1>
         {mode === 'my' && (
           <button className="create-ticket-btn" onClick={() => setShowCreateModal(true)}>
             <Plus size={18} /> New Ticket
@@ -347,7 +347,7 @@ const MaintenanceTicketing = ({ mode = 'my' }) => {
       {showCreateModal && (
         <div className="modal-overlay">
           <div className="modal-content">
-            <h2>Create New Incident Ticket</h2>
+            <h2>Create Support Ticket</h2>
             <form onSubmit={handleCreateTicket}>
               <div className="form-group">
                 <label>Resource / Location</label>
