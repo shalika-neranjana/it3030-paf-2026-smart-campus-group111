@@ -64,9 +64,25 @@ const BookingManagementPage = () => {
     <div className="booking-management-page">
       <header className="page-header">
         <h1>Booking Management</h1>
-        <div className="tabs">
-          <button className="active">All Bookings</button>
-          <button>My Bookings</button>
+        <div className="filter-bar">
+          <div className="tabs">
+            <button className="active">All Bookings</button>
+            <button>My Bookings</button>
+          </div>
+          <select 
+            onChange={(e) => {
+              const status = e.target.value;
+              // Mock filtering logic for now or update API to support status param
+              fetchBookings(); 
+            }}
+            className="status-filter"
+          >
+            <option value="">All Statuses</option>
+            <option value="PENDING">Pending</option>
+            <option value="APPROVED">Approved</option>
+            <option value="REJECTED">Rejected</option>
+            <option value="CANCELLED">Cancelled</option>
+          </select>
         </div>
       </header>
 
