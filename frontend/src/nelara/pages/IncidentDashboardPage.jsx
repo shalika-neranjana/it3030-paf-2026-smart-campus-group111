@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import IncidentCard from '../components/IncidentCard';
 import IncidentForm from '../components/IncidentForm';
+import IncidentStats from '../components/IncidentStats';
 import './IncidentDashboardPage.css';
 
 const IncidentDashboardPage = () => {
@@ -80,6 +81,8 @@ const IncidentDashboardPage = () => {
           </button>
         </div>
       </header>
+
+      <IncidentStats incidents={incidents} />
 
       {loading ? (
         <div className="loading">Loading tickets...</div>
