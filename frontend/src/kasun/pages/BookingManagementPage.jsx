@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import BookingCard from '../components/BookingCard';
+import BookingStats from '../components/BookingStats';
 import './BookingManagementPage.css';
 
 const BookingManagementPage = () => {
@@ -64,6 +65,7 @@ const BookingManagementPage = () => {
     <div className="booking-management-page">
       <header className="page-header">
         <h1>Booking Management</h1>
+        <BookingStats bookings={bookings} />
         <div className="filter-bar">
           <div className="tabs">
             <button className="active">All Bookings</button>
