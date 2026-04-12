@@ -89,10 +89,22 @@ const ResourceManagementPage = () => {
         <form onSubmit={handleSearch}>
           <input 
             type="text" 
-            placeholder="Search by name, location or description..." 
+            placeholder="Search..." 
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
           />
+          <select 
+            onChange={(e) => {
+              const type = e.target.value;
+              fetchResources(type ? `?type=${type}` : '');
+            }}
+          >
+            <option value="">All Types</option>
+            <option value="Lecture Hall">Lecture Hall</option>
+            <option value="Lab">Lab</option>
+            <option value="Meeting Room">Meeting Room</option>
+            <option value="Equipment">Equipment</option>
+          </select>
           <button type="submit">Search</button>
         </form>
       </div>
