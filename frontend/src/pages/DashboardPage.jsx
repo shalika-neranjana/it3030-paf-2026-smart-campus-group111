@@ -5,6 +5,7 @@ import { api, resolveApiUrl } from '../lib/api'
 
 import ManageResources from './ManageResources'
 import BookingManagement from './BookingManagement'
+import MaintenanceTicketing from './MaintenanceTicketing'
 
 const ADMIN_NAV_ITEMS = [
   { key: 'inbox-messages', label: 'Inbox Messages', icon: Inbox },
@@ -18,6 +19,7 @@ const DEFAULT_NAV_ITEMS = [
   { key: 'overview', label: 'Overview', icon: LayoutDashboard },
   { key: 'view-resources', label: 'View Resources', icon: ClipboardList },
   { key: 'my-bookings', label: 'My Reservations', icon: CalendarClock },
+  { key: 'my-tickets', label: 'Support Tickets', icon: LifeBuoy },
 ]
 
 const formatRole = (role) => {
@@ -91,6 +93,10 @@ const DashboardPage = () => {
         return <BookingManagement mode="all" />
       case 'my-bookings':
         return <BookingManagement mode="my" />
+      case 'support-tickets':
+        return <MaintenanceTicketing mode="all" />
+      case 'my-tickets':
+        return <MaintenanceTicketing mode="my" />
       case 'overview':
       default:
         return (

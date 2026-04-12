@@ -50,6 +50,37 @@ public class ImageStorageService {
         return filename;
     }
 
+    public String storeImage(MultipartFile image, String prefix) {
+        if (image == null || image.isEmpty()) {
+            throw new IllegalArgumentException("Image is required");
+        }
+        if (image.getContentType() == null || !image.getContentType().startsWith("image/")) {
+            throw new IllegalArgumentException("Only image files are allowed");
+        }
+
+        try {
+            Files.createDirectories(uploadDirectory);
+        } catch (IOException e) {
+            throw new IllegalStateException("Failed to initialize upload directory", e);
+        }
+
+        String extension = resolveExtension(image.getOriginalFilename());
+        String filename = prefix + "_" + System.currentTimeMillis() + extension;
+
+        Path destination = uploadDirectory.resolve(filename).normalize();
+        if (!destination.startsWith(uploadDirectory)) {
+            throw new IllegalArgumentException("Invalid image filename");
+        }
+
+        try {
+            Files.copy(image.getInputStream(), destination, StandardCopyOption.REPLACE_EXISTING);
+        } catch (IOException e) {
+            throw new IllegalStateException("Failed to save image", e);
+        }
+
+        return filename;
+    }
+
     public String toPublicUrl(String filename) {
         return "/uploads/" + filename;
     }
