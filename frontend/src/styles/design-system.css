@@ -400,19 +400,91 @@ textarea {
   border-color: #c9dff4;
 }
 
-.ui-status-badge--neutral {
-  background: #f3f6f8;
+/* Bookings grid in resource view modal */
+.bookings-list-modal {
+  padding: var(--space-3) 0;
+}
+.booking-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  width: 100%;
+}
+.booking-card {
+  background: var(--color-surface-strong);
+  border: 1px solid var(--color-border-subtle);
+  border-radius: var(--radius-sm);
+  padding: var(--space-3);
+  box-shadow: var(--shadow-soft);
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  width: 100%;
+}
+.booking-card--fullwidth {
+  width: 100%;
+}
+.booking-item-row {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--space-3);
+  align-items: baseline;
+}
+.booking-item-datetime {
+  color: var(--color-text-strong);
+  font-weight: var(--font-weight-semibold);
+}
+.booking-item-user {
   color: var(--color-text-muted);
-  border-color: #dce7ed;
+  font-size: 0.9rem;
+}
+.booking-item-purpose {
+  color: var(--color-text);
+  font-size: 0.95rem;
+}
+.booking-reason {
+  color: var(--color-danger);
+  font-size: 0.85rem;
 }
 
-.ui-feedback {
-  display: grid;
-  place-items: center;
-  gap: var(--space-3);
-  min-height: 220px;
-  padding: var(--space-8) var(--space-5);
-  text-align: center;
+.ui-status-badge--neutral {
+.booking-first-line {
+  display: flex;
+  align-items: center;
+  gap: var(--space-8); /* increased horizontal spacing (tab-like) */
+  width: 100%;
+}
+.booking-col {
+  font-weight: var(--font-weight-bold);
+  color: var(--color-text-strong);
+}
+.booking-col-user {
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text-muted);
+}
+.booking-sep {
+  color: var(--color-text-muted);
+  padding: 0 1rem; /* wider separator spacing */
+}
+
+/* ensure columns share available space nicely */
+.booking-col-date {
+  min-width: 120px;
+}
+.booking-col-time {
+  min-width: 140px;
+}
+.booking-col-user {
+  margin-left: auto;
+}
+.booking-purpose {
+  color: var(--color-text);
+  margin-top: 0.35rem;
+  font-size: 0.95rem;
+}
+.booking-first-line-text {
+  display: none;
+}
   color: var(--color-text-muted);
 }
 
