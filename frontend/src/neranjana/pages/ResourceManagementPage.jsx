@@ -105,6 +105,16 @@ const ResourceManagementPage = () => {
             <option value="Meeting Room">Meeting Room</option>
             <option value="Equipment">Equipment</option>
           </select>
+          <select 
+            onChange={(e) => {
+              const status = e.target.value;
+              fetchResources(status ? `?status=${status}` : '');
+            }}
+          >
+            <option value="">All Statuses</option>
+            <option value="ACTIVE">Active</option>
+            <option value="OUT_OF_SERVICE">Out of Service</option>
+          </select>
           <button type="submit">Search</button>
         </form>
       </div>
