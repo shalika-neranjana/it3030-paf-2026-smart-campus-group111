@@ -67,6 +67,15 @@ const BookingManagementPage = () => {
         <h1>Booking Management</h1>
         <BookingStats bookings={bookings} />
         <div className="filter-bar">
+          <input 
+            type="text" 
+            placeholder="Search Resource ID..." 
+            className="search-input"
+            onChange={(e) => {
+              // Mock search
+              fetchBookings();
+            }}
+          />
           <div className="tabs">
             <button className="active">All Bookings</button>
             <button>My Bookings</button>
