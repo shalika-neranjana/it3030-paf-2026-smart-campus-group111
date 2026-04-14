@@ -63,6 +63,15 @@ const IncidentDashboardPage = () => {
       <header className="page-header">
         <h1>Maintenance & Incidents</h1>
         <div className="header-actions">
+          <input 
+            type="text" 
+            placeholder="Search location..." 
+            className="location-search"
+            onChange={(e) => {
+              // Mock search
+              fetchIncidents();
+            }}
+          />
           <select 
             onChange={(e) => {
               // Mock filter logic
