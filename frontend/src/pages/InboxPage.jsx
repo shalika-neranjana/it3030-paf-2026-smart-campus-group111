@@ -1,8 +1,9 @@
-import React, { useState, useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { api } from '../lib/api'
 import ReactMarkdown from 'react-markdown'
 import { Mail, MailOpen, Trash2, Clock, User, CheckCircle } from 'lucide-react'
-import Swal from 'sweetalert2'
+import Button from '../components/ui/Button'
+import { showToastError } from '../lib/alerts'
 import './InboxPage.css'
 
 const InboxPage = ({ onMessageRead }) => {
@@ -13,19 +14,29 @@ const InboxPage = ({ onMessageRead }) => {
   const getMessageId = (message) => message?.id || message?._id
   const isMessageRead = (message) => Boolean(message?.read || message?.isRead)
 
-  const fetchMessages = async () => {
-    try {
-      const { data } = await api.get('/api/messages/my')
-      setMessages(data)
-      setLoading(false)
-    } catch (error) {
-      console.error('Failed to fetch messages:', error)
-      setLoading(false)
-    }
-  }
-
   useEffect(() => {
-    fetchMessages()
+    let isMounted = true
+
+    const loadMessages = async () => {
+      try {
+        const { data } = await api.get('/api/messages/my')
+        if (isMounted) {
+          setMessages(data)
+          setLoading(false)
+        }
+      } catch (error) {
+        console.error('Failed to fetch messages:', error)
+        if (isMounted) {
+          setLoading(false)
+        }
+      }
+    }
+
+    loadMessages()
+
+    return () => {
+      isMounted = false
+    }
   }, [])
 
   const handleSelectMessage = (message) => {
@@ -50,15 +61,7 @@ const InboxPage = ({ onMessageRead }) => {
       if (onMessageRead) onMessageRead()
     } catch (error) {
       console.error('Failed to mark message as read:', error)
-      Swal.fire({
-        icon: 'error',
-        title: 'Error',
-        text: 'Failed to mark message as read. Please try again.',
-        toast: true,
-        position: 'top-end',
-        showConfirmButton: false,
-        timer: 3000
-      })
+      showToastError('Read Failed', 'Failed to mark message as read. Please try again.')
     }
   }
 
@@ -88,7 +91,7 @@ const InboxPage = ({ onMessageRead }) => {
         </div>
         <div className="message-list">
           {messages.length === 0 ? (
-            <div className="no-messages" style={{ padding: '2rem', textAlign: 'center', color: '#888' }}>
+            <div className="no-messages">
               Your inbox is empty
             </div>
           ) : (
@@ -118,13 +121,13 @@ const InboxPage = ({ onMessageRead }) => {
                 <h3>{selectedMessage.title}</h3>
                 <div className="message-detail-actions">
                   {!isMessageRead(selectedMessage) && (
-                    <button className="action-btn mark-read" onClick={(e) => handleMarkAsRead(e, selectedMessage)}>
+                    <Button variant="secondary" className="message-action-btn mark-read" onClick={(e) => handleMarkAsRead(e, selectedMessage)}>
                       <CheckCircle size={18} /> Mark as Read
-                    </button>
+                    </Button>
                   )}
-                  <button className="action-btn delete" onClick={(e) => handleDeleteMessage(e, getMessageId(selectedMessage))}>
+                  <Button variant="danger" className="message-action-btn delete" onClick={(e) => handleDeleteMessage(e, getMessageId(selectedMessage))}>
                     <Trash2 size={18} /> Delete
-                  </button>
+                  </Button>
                 </div>
               </div>
               <div className="message-meta">

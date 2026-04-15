@@ -70,9 +70,11 @@ const DashboardPage = () => {
     const fetchProfile = async () => {
       try {
         const { data } = await api.get('/api/auth/me')
-        const mergedUser = { ...user, ...data }
-        setUser(mergedUser)
-        localStorage.setItem('authUser', JSON.stringify(mergedUser))
+        setUser((previousUser) => {
+          const mergedUser = { ...previousUser, ...data }
+          localStorage.setItem('authUser', JSON.stringify(mergedUser))
+          return mergedUser
+        })
       } catch {
         // Keep existing local user if profile refresh fails.
       }
@@ -107,10 +109,9 @@ const DashboardPage = () => {
       ? STAFF_NAV_ITEMS
       : DEFAULT_NAV_ITEMS
   const [activeSection, setActiveSection] = useState(() => navItems[0]?.key || 'overview')
-
-  useEffect(() => {
-    setActiveSection(navItems[0]?.key || 'overview')
-  }, [user?.role])
+  const activeSectionKey = navItems.some((item) => item.key === activeSection)
+    ? activeSection
+    : navItems[0]?.key || 'overview'
 
   const onLogout = () => {
     localStorage.removeItem('authToken')
@@ -120,7 +121,7 @@ const DashboardPage = () => {
   }
 
   const renderActiveSection = () => {
-    switch (activeSection) {
+    switch (activeSectionKey) {
       case 'inbox-messages':
         return <InboxPage onMessageRead={() => setUnreadCount((prev) => Math.max(0, prev - 1))} />
       case 'manage-resources':
@@ -138,13 +139,13 @@ const DashboardPage = () => {
       case 'overview':
       default:
         return (
-          <section className="dashboard-hero" style={{ height: '100%' }}>
+          <section className="dashboard-hero dashboard-hero-full">
             <p className="eyebrow">Dashboard</p>
-            <h1>{navItems.find((item) => item.key === activeSection)?.label || 'Welcome to UniReserver'}</h1>
+            <h1>{navItems.find((item) => item.key === activeSectionKey)?.label || 'Welcome to UniReserver'}</h1>
             <p className="subtitle">
               Manage your campus reservations from one place. Your account summary is shown in the header for quick access.
             </p>
-            <div className="feature-strip" style={{ marginTop: '2rem' }}>
+            <div className="feature-strip feature-strip-spaced">
               <div className="feature-card">
                 <h2>Quick Start</h2>
                 <p>Use the sidebar to navigate through your management tools.</p>
@@ -167,7 +168,7 @@ const DashboardPage = () => {
         </Link>
 
         <div className="dashboard-user-area">
-          <Link className="dashboard-user-meta" to="/profile" style={{ textDecoration: 'none', color: 'inherit' }}>
+          <Link className="dashboard-user-meta dashboard-user-link" to="/profile">
             <p className="dashboard-user-name">{displayName}</p>
             <p className="dashboard-user-role">{displayRole}</p>
           </Link>
@@ -202,11 +203,11 @@ const DashboardPage = () => {
                 <button
                   key={item.key}
                   type="button"
-                  className={`dashboard-nav-link ${activeSection === item.key ? 'active' : ''}`}
+                  className={`dashboard-nav-link ${activeSectionKey === item.key ? 'active' : ''}`}
                   onClick={() => setActiveSection(item.key)}
                 >
                   <Icon className="dashboard-nav-icon" size={18} strokeWidth={2.1} aria-hidden="true" />
-                  <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%' }}>
+                  <span className="dashboard-nav-link-label">
                     {item.label}
                     {item.key === 'inbox-messages' && unreadCount > 0 && (
                       <span className="unread-count-badge">{unreadCount}</span>
@@ -218,7 +219,7 @@ const DashboardPage = () => {
           </nav>
         </aside>
 
-        <div className="dashboard-main-content" style={{ flex: 1 }}>
+        <div className="dashboard-main-content">
           {renderActiveSection()}
         </div>
       </main>

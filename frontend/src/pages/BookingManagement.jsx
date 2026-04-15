@@ -1,11 +1,10 @@
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { 
   CheckCircle2, 
   XCircle, 
   Clock, 
   AlertTriangle, 
   Search, 
-  Filter, 
   Calendar,
   User,
   MapPin,
@@ -15,8 +14,12 @@ import {
   MessageSquare,
   Ban
 } from 'lucide-react'
-import Swal from 'sweetalert2'
 import { api } from '../lib/api'
+import Button from '../components/ui/Button'
+import FormField from '../components/ui/FormField'
+import Modal from '../components/ui/Modal'
+import StatusBadge from '../components/ui/StatusBadge'
+import { extractErrorMessage, showConfirm, showError, showSuccess } from '../lib/alerts'
 
 const BookingManagement = ({ mode = 'my' }) => { // 'my' or 'all'
   const [bookings, setBookings] = useState([])
@@ -26,7 +29,7 @@ const BookingManagement = ({ mode = 'my' }) => { // 'my' or 'all'
   const [statusFilter, setStatusFilter] = useState('')
   const [rejectionModal, setRejectionModal] = useState({ open: false, bookingId: '', reason: '' })
 
-  const fetchBookings = async () => {
+  const fetchBookings = useCallback(async () => {
     setLoading(true)
     try {
       const endpoint = mode === 'my' ? '/api/bookings/my' : '/api/bookings'
@@ -38,28 +41,22 @@ const BookingManagement = ({ mode = 'my' }) => { // 'my' or 'all'
     } finally {
       setLoading(false)
     }
-  }
+  }, [mode])
 
   useEffect(() => {
     fetchBookings()
-  }, [mode])
+  }, [fetchBookings])
 
   const handleApprove = async (id) => {
     try {
       await api.put(`/api/bookings/${id}/approve`)
-      Swal.fire({
-        icon: 'success',
-        title: 'Booking Approved',
+      await showSuccess('Booking Approved', 'The booking request is now approved.', {
         timer: 1500,
-        showConfirmButton: false
+        showConfirmButton: false,
       })
       fetchBookings()
     } catch (err) {
-      Swal.fire({
-        icon: 'error',
-        title: 'Approval Failed',
-        text: 'Failed to approve booking.'
-      })
+      await showError('Approval Failed', extractErrorMessage(err, 'Failed to approve booking.'))
     }
   }
 
@@ -67,63 +64,43 @@ const BookingManagement = ({ mode = 'my' }) => { // 'my' or 'all'
     try {
       await api.put(`/api/bookings/${rejectionModal.bookingId}/reject`, { reason: rejectionModal.reason })
       setRejectionModal({ open: false, bookingId: '', reason: '' })
-      Swal.fire({
-        icon: 'success',
-        title: 'Booking Rejected',
+      await showSuccess('Booking Rejected', 'The requester will now see the rejection reason.', {
         timer: 1500,
-        showConfirmButton: false
+        showConfirmButton: false,
       })
       fetchBookings()
     } catch (err) {
-      Swal.fire({
-        icon: 'error',
-        title: 'Rejection Failed',
-        text: 'Failed to reject booking.'
-      })
+      await showError('Rejection Failed', extractErrorMessage(err, 'Failed to reject booking.'))
     }
   }
 
   const handleCancel = async (id) => {
-    const result = await Swal.fire({
-      title: 'Are you sure?',
-      text: "Do you really want to cancel this booking?",
-      icon: 'warning',
-      showCancelButton: true,
-      confirmButtonColor: '#d33',
-      cancelButtonColor: '#3085d6',
-      confirmButtonText: 'Yes, cancel it!'
-    })
+    const result = await showConfirm('Cancel Booking?', 'Do you really want to cancel this booking?', 'Cancel Booking')
 
     if (result.isConfirmed) {
       try {
         await api.put(`/api/bookings/${id}/cancel`)
-        Swal.fire(
-          'Cancelled!',
-          'Your booking has been cancelled.',
-          'success'
-        )
+        await showSuccess('Booking Cancelled', 'Your booking has been cancelled.', {
+          timer: 1500,
+          showConfirmButton: false,
+        })
         fetchBookings()
       } catch (err) {
-        Swal.fire({
-          icon: 'error',
-          title: 'Cancellation Failed',
-          text: 'Failed to cancel booking.'
-        })
+        await showError('Cancellation Failed', extractErrorMessage(err, 'Failed to cancel booking.'))
       }
     }
   }
 
   const getStatusBadge = (status) => {
-    const badgeStyle = { position: 'static', display: 'inline-flex', alignItems: 'center', gap: '0.25rem' }
     switch (status) {
       case 'APPROVED':
-        return <span className="status-badge status-active" style={badgeStyle}><CheckCircle2 size={14} /> Approved</span>
+        return <StatusBadge status="APPROVED" icon={CheckCircle2} />
       case 'REJECTED':
-        return <span className="status-badge status-out_of_service" style={badgeStyle}><XCircle size={14} /> Rejected</span>
+        return <StatusBadge status="REJECTED" icon={XCircle} />
       case 'CANCELLED':
-        return <span className="status-badge" style={{ ...badgeStyle, backgroundColor: '#f1f5f9', color: '#64748b', border: '1px solid #e2e8f0' }}><Ban size={14} /> Cancelled</span>
+        return <StatusBadge status="CANCELLED" icon={Ban} />
       default:
-        return <span className="status-badge" style={{ ...badgeStyle, backgroundColor: '#fff7ed', color: '#c2410c', border: '1px solid #fed7aa' }}><Clock size={14} /> Pending</span>
+        return <StatusBadge status="PENDING" icon={Clock} />
     }
   }
 
@@ -140,36 +117,37 @@ const BookingManagement = ({ mode = 'my' }) => { // 'my' or 'all'
 
   if (loading) {
     return (
-      <div style={{ textAlign: 'center', padding: '3rem' }}>
-        <Loader2 className="animate-spin" size={32} style={{ margin: '0 auto', color: '#1167cc' }} />
-        <p style={{ marginTop: '1rem' }}>Loading reservations...</p>
+      <div className="ui-feedback">
+        <Loader2 className="animate-spin loading-spinner-icon" size={32} />
+        <p>Loading reservations...</p>
       </div>
     )
   }
 
   if (error) {
     return (
-      <div className="error-message" style={{ textAlign: 'center', padding: '3rem' }}>
-        <AlertTriangle size={48} style={{ margin: '0 auto 1rem' }} />
+      <div className="ui-feedback ui-feedback--error">
+        <AlertTriangle size={48} />
         <p>{error}</p>
-        <button className="primary-btn" onClick={fetchBookings} style={{ marginTop: '1rem' }}>Retry</button>
+        <Button onClick={fetchBookings}>Retry</Button>
       </div>
     )
   }
 
   return (
     <div className="booking-management">
-      <div className="section-header" style={{ marginBottom: '1.5rem' }}>
+      <div className="ui-section-copy booking-section-copy">
         <h2>{mode === 'my' ? 'My Reservations' : 'Manage Booking Requests'}</h2>
-        <p style={{ color: '#526f81' }}>
+        <p>
           {mode === 'my' ? 'Track your upcoming and past resource requests.' : 'Review, approve, or reject reservation requests from campus users.'}
         </p>
       </div>
 
-      <div className="manage-controls" style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap', marginBottom: '1.5rem' }}>
-        <div className="search-box" style={{ flex: 1, minWidth: '250px' }}>
+      <div className="manage-controls ui-filter-row">
+        <div className="search-box booking-search-box">
           <Search className="search-icon" size={20} />
           <input 
+            className="ui-input"
             type="text" 
             placeholder="Search by purpose or resource..." 
             value={searchQuery}
@@ -190,125 +168,99 @@ const BookingManagement = ({ mode = 'my' }) => { // 'my' or 'all'
         </select>
       </div>
 
-      <div className="bookings-list" style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+      <div className="bookings-list booking-list">
         {filteredBookings.map((booking) => (
-          <div key={booking.id} className="booking-card" style={{ 
-            backgroundColor: '#fff', 
-            borderRadius: '12px', 
-            padding: '1.5rem',
-            boxShadow: '0 2px 4px rgba(0,0,0,0.05)',
-            border: '1px solid #eef2f6',
-            display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'flex-start'
-          }}>
-            <div className="booking-info" style={{ display: 'flex', gap: '1.5rem' }}>
-              <div className="booking-date-box" style={{ 
-                backgroundColor: '#f8fafc', 
-                padding: '0.75rem', 
-                borderRadius: '8px', 
-                textAlign: 'center',
-                minWidth: '80px'
-              }}>
-                <Calendar size={20} style={{ color: '#1167cc', marginBottom: '0.25rem' }} />
-                <div style={{ fontWeight: 700, fontSize: '0.9rem' }}>{new Date(booking.date).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}</div>
-                <div style={{ fontSize: '0.75rem', color: '#64748b' }}>{new Date(booking.date).getFullYear()}</div>
+          <div key={booking.id} className="booking-card">
+            <div className="booking-info">
+              <div className="booking-date-box">
+                <Calendar size={20} className="booking-date-icon" />
+                <div className="booking-date-value">{new Date(booking.date).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}</div>
+                <div className="booking-date-year">{new Date(booking.date).getFullYear()}</div>
               </div>
 
               <div className="booking-details">
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.25rem' }}>
+                <div className="booking-meta-row">
                   {getStatusBadge(booking.status)}
-                  <span style={{ fontSize: '0.85rem', color: '#64748b', display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
+                  <span className="booking-time">
                     <Clock size={14} /> {booking.startTime} - {booking.endTime}
                   </span>
                 </div>
-                <h3 style={{ margin: '0.5rem 0', fontSize: '1.1rem' }}>{booking.purpose}</h3>
-                <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem', fontSize: '0.85rem', color: '#526f81' }}>
+                <h3 className="booking-title">{booking.purpose}</h3>
+                <div className="booking-detail-row">
+                  <div className="booking-detail-chip">
                     <MapPin size={14} /> {booking.facilityName}
                   </div>
                   {booking.expectedAttendees && (
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem', fontSize: '0.85rem', color: '#526f81' }}>
+                    <div className="booking-detail-chip">
                       <Users size={14} /> {booking.expectedAttendees} Attendees
                     </div>
                   )}
                   {mode === 'all' && (
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem', fontSize: '0.85rem', color: '#526f81' }}>
+                    <div className="booking-detail-chip">
                       <User size={14} /> Requested by: {booking.userName}
                     </div>
                   )}
                 </div>
                 {booking.status === 'REJECTED' && booking.rejectionReason && (
-                  <div style={{ 
-                    marginTop: '0.75rem', 
-                    padding: '0.5rem 0.75rem', 
-                    backgroundColor: '#fff1f2', 
-                    color: '#e11d48',
-                    borderRadius: '6px',
-                    fontSize: '0.85rem',
-                    display: 'flex',
-                    gap: '0.5rem',
-                    alignItems: 'center'
-                  }}>
+                  <div className="booking-rejection-note">
                     <MessageSquare size={14} /> <strong>Reason:</strong> {booking.rejectionReason}
                   </div>
                 )}
               </div>
             </div>
 
-            <div className="booking-actions" style={{ display: 'flex', gap: '0.5rem' }}>
+            <div className="booking-actions">
               {mode === 'all' && booking.status === 'PENDING' && (
                 <>
-                  <button className="primary-btn" onClick={() => handleApprove(booking.id)} style={{ padding: '0.5rem 1rem' }}>Approve</button>
-                  <button className="ghost-btn" onClick={() => setRejectionModal({ open: true, bookingId: booking.id, reason: '' })} style={{ padding: '0.5rem 1rem', color: '#e11d48' }}>Reject</button>
+                  <Button onClick={() => handleApprove(booking.id)}>Approve</Button>
+                  <Button variant="danger" onClick={() => setRejectionModal({ open: true, bookingId: booking.id, reason: '' })}>Reject</Button>
                 </>
               )}
               {mode === 'my' && booking.status === 'PENDING' && (
-                <button className="ghost-btn" onClick={() => handleCancel(booking.id)} style={{ color: '#e11d48' }}><Trash2 size={18} /></button>
+                <Button variant="danger" iconOnly onClick={() => handleCancel(booking.id)}><Trash2 size={18} /></Button>
               )}
               {booking.status === 'APPROVED' && (
-                 <button className="ghost-btn" onClick={() => handleCancel(booking.id)} style={{ color: '#64748b', fontSize: '0.85rem' }}>Cancel Booking</button>
+                <Button variant="secondary" onClick={() => handleCancel(booking.id)}>Cancel Booking</Button>
               )}
             </div>
           </div>
         ))}
 
         {filteredBookings.length === 0 && (
-          <div style={{ textAlign: 'center', padding: '3rem', backgroundColor: '#f8fafc', borderRadius: '12px', border: '2px dashed #e2e8f0' }}>
-            <AlertTriangle size={48} style={{ margin: '0 auto 1rem', opacity: 0.2 }} />
-            <p style={{ color: '#64748b' }}>No bookings found matching your criteria.</p>
+          <div className="ui-feedback ui-feedback-card">
+            <AlertTriangle size={48} className="ui-feedback-icon" />
+            <p>No bookings found matching your criteria.</p>
           </div>
         )}
       </div>
 
       {/* Rejection Reason Modal */}
       {rejectionModal.open && (
-        <div className="modal-backdrop">
-          <div className="modal-content" style={{ maxWidth: '400px' }}>
-            <div className="modal-header">
-              <h2>Reject Booking</h2>
-              <button className="close-btn" onClick={() => setRejectionModal({ ...rejectionModal, open: false })}><XCircle size={20} /></button>
-            </div>
-            <div className="modal-body">
-              <div className="form-group">
-                <label>Reason for Rejection</label>
-                <textarea 
-                  value={rejectionModal.reason} 
-                  onChange={(e) => setRejectionModal({ ...rejectionModal, reason: e.target.value })}
-                  placeholder="Explain why this request is being rejected..."
-                  style={{ minHeight: '100px' }}
-                  required
-                ></textarea>
-              </div>
-            </div>
-            <div className="modal-footer">
-              <button className="ghost-btn" onClick={() => setRejectionModal({ ...rejectionModal, open: false })}>Cancel</button>
-              <button className="primary-btn" style={{ backgroundColor: '#e11d48' }} onClick={handleReject} disabled={!rejectionModal.reason.trim()}>
+        <Modal
+          title="Reject Booking"
+          subtitle="Provide a short explanation so the requester understands what needs to change."
+          size="sm"
+          onClose={() => setRejectionModal({ ...rejectionModal, open: false })}
+          footer={
+            <>
+              <Button variant="secondary" onClick={() => setRejectionModal({ ...rejectionModal, open: false })}>Cancel</Button>
+              <Button variant="danger" onClick={handleReject} disabled={!rejectionModal.reason.trim()}>
                 Reject Request
-              </button>
-            </div>
-          </div>
-        </div>
+              </Button>
+            </>
+          }
+        >
+          <FormField label="Reason for Rejection" htmlFor="rejection-reason" required>
+            <textarea
+              className="ui-textarea"
+              id="rejection-reason"
+              value={rejectionModal.reason}
+              onChange={(e) => setRejectionModal({ ...rejectionModal, reason: e.target.value })}
+              placeholder="Explain why this request is being rejected..."
+              required
+            ></textarea>
+          </FormField>
+        </Modal>
       )}
     </div>
   )
