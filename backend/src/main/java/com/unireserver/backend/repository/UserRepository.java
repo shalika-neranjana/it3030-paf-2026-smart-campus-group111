@@ -12,4 +12,6 @@ public interface UserRepository extends MongoRepository<AppUser, String> {
     boolean existsByEmail(String email);
 
     boolean existsByPhoneNumber(String phoneNumber);
+
+    java.util.List<AppUser> findByRole(com.unireserver.backend.model.UserRole role);
 }
