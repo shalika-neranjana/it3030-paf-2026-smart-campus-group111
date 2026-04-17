@@ -367,6 +367,23 @@
   background: #fee2e2;
 }
 
+/* Large prominent resolve call-to-action inside ticket details */
+.resolve-cta {
+  padding: 1rem 2rem;
+  border-bottom: 1px solid var(--color-border-subtle);
+  background: linear-gradient(90deg, rgba(255,255,255,0.6), rgba(248,252,255,0.9));
+  display: flex;
+  justify-content: flex-start;
+}
+
+.mark-resolved-large {
+  padding: 0.9rem 1.6rem;
+  font-size: 1rem;
+  border-radius: 12px;
+  box-shadow: 0 12px 30px rgba(34,197,94,0.12);
+  letter-spacing: 0.01em;
+}
+
 .details-grid {
   display: grid;
   grid-template-columns: 1fr 400px;
