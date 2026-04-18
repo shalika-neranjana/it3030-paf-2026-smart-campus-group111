@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import ResourceCard from '../components/ResourceCard';
 import ResourceForm from '../components/ResourceForm';
+import ResourceStats from '../components/ResourceStats';
 import './ResourceManagementPage.css';
 
 const ResourceManagementPage = () => {
@@ -84,6 +85,8 @@ const ResourceManagementPage = () => {
           Add New Resource
         </button>
       </header>
+
+      <ResourceStats resources={resources} />
 
       <div className="search-bar">
         <form onSubmit={handleSearch}>
