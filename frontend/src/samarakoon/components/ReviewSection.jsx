@@ -75,14 +75,18 @@ const ReviewSection = ({ resourceId }) => {
       </form>
 
       <div className="review-list">
-        {reviews.map(review => (
-          <ReviewCard 
-            key={review.id} 
-            review={review} 
-            onLike={() => {}}
-            onResponse={() => {}}
-          />
-        ))}
+        {reviews.length > 0 ? (
+          reviews.map(review => (
+            <ReviewCard 
+              key={review.id} 
+              review={review} 
+              onLike={() => {}}
+              onResponse={() => {}}
+            />
+          ))
+        ) : (
+          <div className="no-reviews">No reviews yet. Be the first to share your experience!</div>
+        )}
       </div>
     </div>
   );
