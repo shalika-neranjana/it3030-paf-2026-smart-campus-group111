@@ -149,20 +149,22 @@ const DashboardPage = () => {
         </Link>
 
         <div className="dashboard-user-area">
-          <div className="dashboard-user-meta">
+          <Link className="dashboard-user-meta" to="/profile" style={{ textDecoration: 'none', color: 'inherit' }}>
             <p className="dashboard-user-name">{displayName}</p>
             <p className="dashboard-user-role">{displayRole}</p>
-          </div>
+          </Link>
 
-          <img
-            className="dashboard-user-avatar"
-            src={profileImage}
-            alt={`${displayName} profile`}
-            onError={(event) => {
-              event.currentTarget.onerror = null
-              event.currentTarget.src = '/logo.png'
-            }}
-          />
+          <Link to="/profile">
+            <img
+              className="dashboard-user-avatar"
+              src={profileImage}
+              alt={`${displayName} profile`}
+              onError={(event) => {
+                event.currentTarget.onerror = null
+                event.currentTarget.src = '/logo.png'
+              }}
+            />
+          </Link>
 
           <button className="logout-btn" type="button" onClick={onLogout}>
             Logout

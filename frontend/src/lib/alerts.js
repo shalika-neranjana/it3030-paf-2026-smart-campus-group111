@@ -34,3 +34,15 @@ export const showWarning = (title, text) =>
     title,
     text,
   })
+
+export const showConfirm = (title, text, confirmButtonText = 'Yes, do it!') =>
+  Swal.fire({
+    ...baseConfig,
+    icon: 'warning',
+    title,
+    text,
+    showCancelButton: true,
+    confirmButtonColor: '#d33',
+    cancelButtonColor: '#1573d8',
+    confirmButtonText,
+  })
