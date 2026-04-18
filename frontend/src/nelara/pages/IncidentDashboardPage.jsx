@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import IncidentCard from '../components/IncidentCard';
 import IncidentForm from '../components/IncidentForm';
 import IncidentStats from '../components/IncidentStats';
+import LoadingSpinner from '../components/LoadingSpinner';
 import './IncidentDashboardPage.css';
 
 const IncidentDashboardPage = () => {
@@ -94,7 +95,7 @@ const IncidentDashboardPage = () => {
       <IncidentStats incidents={incidents} />
 
       {loading ? (
-        <div className="loading">Loading tickets...</div>
+        <LoadingSpinner />
       ) : (
         <div className="incident-grid">
           {incidents.length > 0 ? (
