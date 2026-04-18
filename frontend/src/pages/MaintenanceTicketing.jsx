@@ -584,6 +584,24 @@ const MaintenanceTicketing = ({ mode = 'my' }) => {
                 </div>
               </div>
 
+              {/* Prominent Resolve CTA placed under the header for each ticket when actionable */}
+              {(isAdmin || isStaffOrTech) && (selectedTicket.status === 'OPEN' || selectedTicket.status === 'IN_PROGRESS') && (
+                <div className="resolve-cta">
+                  <button className="action-btn resolved mark-resolved-large" onClick={async () => {
+                    const { value: notes } = await Swal.fire({
+                      title: 'Resolution Notes',
+                      input: 'textarea',
+                      inputLabel: 'Enter details about the fix:',
+                      inputPlaceholder: 'The issue was resolved by...',
+                      showCancelButton: true
+                    })
+                    if (notes) handleUpdateStatus(selectedTicket.id, 'RESOLVED', { resolutionNotes: notes })
+                  }}>
+                    Mark Resolved
+                  </button>
+                </div>
+              )}
+
               <div className="details-grid">
                 <div className="details-info">
                   {selectedTicket.assignedTechnicianId && (
