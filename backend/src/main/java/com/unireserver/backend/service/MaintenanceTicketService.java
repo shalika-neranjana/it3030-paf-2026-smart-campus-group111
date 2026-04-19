@@ -195,8 +195,9 @@ public class MaintenanceTicketService {
         MaintenanceTicket ticket = getTicketById(id);
         
         if (ticket.getRequesterId().equals(currentUser.getId())) {
-            if (ticket.getStatus() != TicketStatus.RESOLVED && ticket.getStatus() != TicketStatus.REJECTED) {
-                throw new RuntimeException("Creators can only delete tickets when status is RESOLVED or REJECTED");
+            // Allow creators to delete their own tickets when they are RESOLVED, REJECTED, or still PENDING
+            if (ticket.getStatus() != TicketStatus.RESOLVED && ticket.getStatus() != TicketStatus.REJECTED && ticket.getStatus() != TicketStatus.PENDING) {
+                throw new RuntimeException("Creators can only delete tickets when status is PENDING, RESOLVED, or REJECTED");
             }
             ticketRepository.deleteById(id);
         } else {
