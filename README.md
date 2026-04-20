@@ -26,24 +26,27 @@ This project is a full-stack Smart Campus Management System built with Spring Bo
 
 ## Prerequisites
 
-Install these before running the project:
+Install the following before running the project:
 
 1. Java Development Kit (JDK) 25
-2. Node.js (latest LTS recommended, e.g., 20+)
-3. npm (comes with Node.js)
-4. Git
-5. MongoDB access (local MongoDB or MongoDB Atlas connection string)
+2. Node.js (latest LTS recommended, for example 20+)
+3. npm (included with Node.js)
+4. MongoDB access (local instance or MongoDB Atlas)
 
-### Verify Installation
+### Verify Installed Versions
 
-Run these commands in a terminal:
+Run the following commands:
 
 ```powershell
 java -version
-node -v
-npm -v
-git --version
+node --version
+npm --version
 ```
+
+### Download Links
+
+- Java (JDK 25): https://www.oracle.com/apac/java/technologies/downloads/
+- Node.js: https://nodejs.org/en/download
 
 ## Project Structure
 
@@ -55,7 +58,7 @@ git --version
 ### 1. Clone the Repository
 
 ```bash
-git clone <your-repo-url>
+git clone https://github.com/shalika-neranjana/it3030-paf-2026-smart-campus-group111.git
 cd it3030-paf-2026-smart-campus-group111
 ```
 
