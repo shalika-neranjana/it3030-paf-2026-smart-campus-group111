@@ -2,6 +2,15 @@ import React from 'react';
 import './IncidentCard.css';
 
 const IncidentCard = ({ incident, onStatusUpdate, onComment }) => {
+  const getCategoryIcon = (category) => {
+    switch(category) {
+      case 'Plumbing': return '🚰';
+      case 'Electrical': return '⚡';
+      case 'IT': return '💻';
+      case 'Furniture': return '🪑';
+      default: return '🛠️';
+    }
+  };
   const getPriorityClass = (priority) => priority.toLowerCase();
   const getStatusClass = (status) => status.toLowerCase().replace('_', '-');
 
@@ -16,7 +25,7 @@ const IncidentCard = ({ incident, onStatusUpdate, onComment }) => {
         </span>
       </div>
       <div className="incident-card-body">
-        <h3>{incident.category}</h3>
+        <h3>{getCategoryIcon(incident.category)} {incident.category}</h3>
         <p className="location">📍 {incident.location}</p>
         <p className="description">{incident.description}</p>
       </div>
