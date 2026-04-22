@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import ResourceCard from '../components/ResourceCard';
 import ResourceForm from '../components/ResourceForm';
 import ResourceStats from '../components/ResourceStats';
+import LoadingSpinner from '../components/LoadingSpinner';
 import './ResourceManagementPage.css';
 
 const ResourceManagementPage = () => {
@@ -123,7 +124,7 @@ const ResourceManagementPage = () => {
       </div>
 
       {loading ? (
-        <div className="loading">Loading resources...</div>
+        <LoadingSpinner />
       ) : (
         <div className="resource-grid">
           {resources.length > 0 ? (
