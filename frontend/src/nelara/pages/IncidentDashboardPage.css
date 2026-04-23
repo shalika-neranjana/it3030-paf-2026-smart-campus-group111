@@ -32,6 +32,18 @@
   color: #4a5568;
 }
 
+.location-search {
+  padding: 0.75rem 1rem;
+  border-radius: 12px;
+  border: 1px solid #e2e8f0;
+  width: 250px;
+}
+
+.location-search:focus {
+  outline: none;
+  border-color: #3182ce;
+}
+
 .btn-report {
   background-color: #3182ce;
   color: white;
