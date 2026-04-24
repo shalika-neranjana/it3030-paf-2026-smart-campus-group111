@@ -1,0 +1,31 @@
+.incident-stats {
+  display: flex;
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+}
+
+.stat-box {
+  flex: 1;
+  padding: 1.5rem;
+  border-radius: 16px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+}
+
+.stat-box .count {
+  font-size: 2rem;
+  font-weight: 800;
+}
+
+.stat-box .label {
+  font-size: 0.875rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.stat-box.open { background-color: #fff5f5; color: #c53030; }
+.stat-box.progress { background-color: #fffaf0; color: #9c4221; }
+.stat-box.resolved { background-color: #f0fff4; color: #276749; }

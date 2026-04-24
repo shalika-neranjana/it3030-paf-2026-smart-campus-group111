@@ -1,0 +1,54 @@
+.notification-page {
+  padding: 2.5rem;
+  max-width: 900px;
+  margin: 0 auto;
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2rem;
+}
+
+.header select {
+  padding: 0.5rem 1rem;
+  border-radius: 8px;
+  border: 1px solid #e2e8f0;
+}
+
+.notification-card {
+  background: white;
+  padding: 1.5rem;
+  border-radius: 12px;
+  margin-bottom: 1rem;
+  border-left: 6px solid #e2e8f0;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+}
+
+.notification-card.unread {
+  border-left-color: #3b82f6;
+  background: #f0f7ff;
+}
+
+.card-header {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 0.75rem;
+  font-size: 0.8rem;
+}
+
+.card-header .type {
+  font-weight: bold;
+  color: #3b82f6;
+  text-transform: uppercase;
+}
+
+.card-header .date {
+  color: #94a3b8;
+}
+
+.message {
+  color: #1e293b;
+  margin: 0;
+}

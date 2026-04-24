@@ -1,0 +1,86 @@
+.incident-form-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.7);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1200;
+}
+
+.incident-form {
+  background: white;
+  padding: 2.5rem;
+  border-radius: 20px;
+  width: 100%;
+  max-width: 500px;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+}
+
+.incident-form h2 {
+  margin-top: 0;
+  margin-bottom: 2rem;
+  color: #2d3748;
+  border-bottom: 2px solid #edf2f7;
+  padding-bottom: 0.5rem;
+}
+
+.priority-options {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.priority-label {
+  flex: 1;
+  padding: 0.5rem;
+  border: 2px solid #e2e8f0;
+  border-radius: 8px;
+  text-align: center;
+  cursor: pointer;
+  font-size: 0.8rem;
+  font-weight: 700;
+  transition: all 0.2s;
+}
+
+.priority-label input {
+  display: none;
+}
+
+.priority-label:has(input:checked) {
+  border-color: #4a5568;
+  background-color: #f7fafc;
+}
+
+.priority-label.low:has(input:checked) { border-color: #48bb78; color: #2f855a; }
+.priority-label.medium:has(input:checked) { border-color: #ecc94b; color: #975a16; }
+.priority-label.high:has(input:checked) { border-color: #ed8936; color: #9c4221; }
+.priority-label.urgent:has(input:checked) { border-color: #f56565; color: #9b2c2c; }
+
+.form-actions {
+  display: flex;
+  gap: 1rem;
+  margin-top: 2rem;
+}
+
+.btn-report {
+  flex: 2;
+  background-color: #2d3748;
+  color: white;
+  padding: 0.75rem;
+  border: none;
+  border-radius: 10px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.btn-cancel {
+  flex: 1;
+  background-color: #edf2f7;
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+}
