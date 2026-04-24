@@ -5,14 +5,21 @@ import {
   CheckCircle,
   Clock,
   AlertCircle,
+  AlertTriangle,
+  Calendar,
+  CreditCard,
   MessageSquare,
+  Megaphone,
   Search,
+  Shield,
   ChevronRight,
   Bell,
   FileText,
   CheckCheck,
   Pencil,
   Plus,
+  Wrench,
+  X,
 } from 'lucide-react'
 import { api } from '../lib/api'
 import Swal from 'sweetalert2'
@@ -25,6 +32,7 @@ const NOTIFICATION_TYPES = {
     color: 'success',
     bg: '#d1fae5',
     border: '#10b981',
+    description: 'Confirm approved reservations and let users know their booking is ready.',
   },
   BOOKING_REJECTED: {
     label: 'Booking Rejected',
@@ -32,6 +40,7 @@ const NOTIFICATION_TYPES = {
     color: 'error',
     bg: '#fee2e2',
     border: '#ef4444',
+    description: 'Explain declined booking requests and point users toward next steps.',
   },
   TICKET_UPDATED: {
     label: 'Ticket Updated',
@@ -39,6 +48,7 @@ const NOTIFICATION_TYPES = {
     color: 'info',
     bg: '#dbeafe',
     border: '#3b82f6',
+    description: 'Share progress, status changes, or technician notes on support tickets.',
   },
   NEW_COMMENT: {
     label: 'New Comment',
@@ -46,6 +56,7 @@ const NOTIFICATION_TYPES = {
     color: 'warning',
     bg: '#fef3c7',
     border: '#f59e0b',
+    description: 'Notify users when someone has replied or left a new comment for them.',
   },
   BOOKING_PENDING: {
     label: 'Booking Pending',
@@ -53,7 +64,72 @@ const NOTIFICATION_TYPES = {
     color: 'pending',
     bg: '#e0e7ff',
     border: '#6366f1',
+    description: 'Waiting list updates, approval queues, and pending room requests.',
   },
+  MAINTENANCE_UPDATE: {
+    label: 'Maintenance Update',
+    icon: Wrench,
+    color: 'info',
+    bg: '#dbeafe',
+    border: '#2563eb',
+    description: 'Repairs, service progress, and equipment restoration updates.',
+  },
+  ANNOUNCEMENT: {
+    label: 'Announcement',
+    icon: Megaphone,
+    color: 'warning',
+    bg: '#fef3c7',
+    border: '#d97706',
+    description: 'General campus notices, admin messages, and broad communications.',
+  },
+  EVENT_REMINDER: {
+    label: 'Event Reminder',
+    icon: Calendar,
+    color: 'pending',
+    bg: '#ede9fe',
+    border: '#7c3aed',
+    description: 'Upcoming events, deadlines, workshops, or scheduled activities.',
+  },
+  PAYMENT_REMINDER: {
+    label: 'Payment Reminder',
+    icon: CreditCard,
+    color: 'error',
+    bg: '#fee2e2',
+    border: '#dc2626',
+    description: 'Fees due, invoice reminders, and payment follow-ups.',
+  },
+  SECURITY_NOTICE: {
+    label: 'Security Notice',
+    icon: Shield,
+    color: 'info',
+    bg: '#dbeafe',
+    border: '#1d4ed8',
+    description: 'Access changes, security checks, and account safety alerts.',
+  },
+  SYSTEM_ALERT: {
+    label: 'System Alert',
+    icon: AlertTriangle,
+    color: 'error',
+    bg: '#fee2e2',
+    border: '#b91c1c',
+    description: 'Urgent platform incidents, outages, or system-level disruptions.',
+  },
+}
+
+const DEFAULT_NOTIFICATION_TYPE = 'BOOKING_PENDING'
+
+const createFormState = (notification) => {
+  const type = notification?.type && NOTIFICATION_TYPES[notification.type] ? notification.type : DEFAULT_NOTIFICATION_TYPE
+  const resource = notification?.resource ?? ''
+  const title = notification?.title ?? getNotificationTitle(type, resource)
+
+  return {
+    type,
+    title,
+    resource,
+    message: notification?.message ?? '',
+    isRead: Boolean(notification?.isRead),
+  }
 }
 
 const MOCK_NOTIFICATIONS = [
@@ -110,33 +186,51 @@ const getStoredUser = () => {
   }
 }
 
-const escapeHtml = (value = '') =>
-  value
-    .replaceAll('&', '&amp;')
-    .replaceAll('<', '&lt;')
-    .replaceAll('>', '&gt;')
-    .replaceAll('"', '&quot;')
-    .replaceAll("'", '&#39;')
+const getNotificationTitle = (type, resource = '') => {
+  const typeLabel = NOTIFICATION_TYPES[type]?.label ?? 'Notification'
+  const trimmedResource = resource.trim()
 
-const buildEditorHtml = (notification = {}) => `
-  <div class="notification-editor">
-    <label class="notification-editor-label" for="notification-type">Type</label>
-    <select id="notification-type" class="swal2-select">
-      ${Object.entries(NOTIFICATION_TYPES)
-        .map(
-          ([value, config]) =>
-            `<option value="${value}" ${notification.type === value ? 'selected' : ''}>${config.label}</option>`
-        )
-        .join('')}
-    </select>
-    <label class="notification-editor-label" for="notification-title">Title</label>
-    <input id="notification-title" class="swal2-input" value="${escapeHtml(notification.title ?? '')}" placeholder="Notification title" />
-    <label class="notification-editor-label" for="notification-resource">Resource</label>
-    <input id="notification-resource" class="swal2-input" value="${escapeHtml(notification.resource ?? '')}" placeholder="Lecture Hall A" />
-    <label class="notification-editor-label" for="notification-message">Message</label>
-    <textarea id="notification-message" class="swal2-textarea" placeholder="Write the message here">${escapeHtml(notification.message ?? '')}</textarea>
-  </div>
-`
+  return trimmedResource ? `${typeLabel}: ${trimmedResource}` : typeLabel
+}
+
+const validateNotificationForm = (formData) => {
+  const errors = {}
+
+  if (!formData.type) {
+    errors.type = 'Please choose a notification type.'
+  }
+
+  if (!formData.resource.trim()) {
+    errors.resource = 'Resource is required.'
+  }
+
+  if (!formData.title.trim()) {
+    errors.title = 'Title is required.'
+  } else if (formData.title.trim().length < 6) {
+    errors.title = 'Title should be at least 6 characters long.'
+  }
+
+  if (!formData.message.trim()) {
+    errors.message = 'Message is required.'
+  } else if (formData.message.trim().length < 12) {
+    errors.message = 'Message should be at least 12 characters long.'
+  }
+
+  return errors
+}
+
+const getApiErrorMessage = (error, fallbackMessage) =>
+  error?.response?.data?.message || error?.message || fallbackMessage
+
+const buildOptimisticNotification = (payload) => ({
+  id: `local-${Date.now()}`,
+  type: payload.type,
+  title: payload.title,
+  message: payload.message,
+  resource: payload.resource,
+  timestamp: new Date().toISOString(),
+  isRead: Boolean(payload.isRead),
+})
 
 const NotificationsPage = () => {
   const [notifications, setNotifications] = useState([])
@@ -147,6 +241,13 @@ const NotificationsPage = () => {
   const [filterType, setFilterType] = useState('all')
   const [filterStatus, setFilterStatus] = useState('all')
   const [user, setUser] = useState(getStoredUser)
+  const [isEditorOpen, setIsEditorOpen] = useState(false)
+  const [editingNotificationId, setEditingNotificationId] = useState(null)
+  const [formData, setFormData] = useState(() => createFormState())
+  const [formErrors, setFormErrors] = useState({})
+  const [isSubmittingForm, setIsSubmittingForm] = useState(false)
+  const [isTitleManuallyEdited, setIsTitleManuallyEdited] = useState(false)
+  const [toast, setToast] = useState(null)
 
   const isAdmin = isAdminRole(user?.role)
 
@@ -222,65 +323,130 @@ const NotificationsPage = () => {
     setSelectedNotification(updatedNotification)
   }
 
-  const promptForNotification = async (notification) => {
-    const result = await Swal.fire({
-      title: notification ? 'Edit notification' : 'Create notification',
-      html: buildEditorHtml(notification),
-      focusConfirm: false,
-      showCancelButton: true,
-      confirmButtonText: notification ? 'Save changes' : 'Create',
-      preConfirm: () => {
-        const popup = Swal.getPopup()
-        const type = popup.querySelector('#notification-type')?.value
-        const title = popup.querySelector('#notification-title')?.value.trim()
-        const resource = popup.querySelector('#notification-resource')?.value.trim()
-        const message = popup.querySelector('#notification-message')?.value.trim()
-
-        if (!type || !title || !resource || !message) {
-          Swal.showValidationMessage('Type, title, resource, and message are required.')
-          return false
-        }
-
-        return {
-          type,
-          title,
-          resource,
-          message,
-          isRead: notification?.isRead ?? false,
-        }
-      },
-    })
-
-    return result.isConfirmed ? result.value : null
+  const showToast = (variant, title, message) => {
+    setToast({ variant, title, message })
+    window.clearTimeout(showToast.timeoutId)
+    showToast.timeoutId = window.setTimeout(() => setToast(null), 2600)
   }
 
-  const createNotification = async () => {
-    const payload = await promptForNotification()
-    if (!payload) return
+  const resetEditor = () => {
+    setIsEditorOpen(false)
+    setEditingNotificationId(null)
+    setFormData(createFormState())
+    setFormErrors({})
+    setIsSubmittingForm(false)
+    setIsTitleManuallyEdited(false)
+  }
 
-    try {
-      const { data } = await api.post('/api/notifications', payload)
-      const created = normalizeNotification(data)
-      upsertNotification(created)
-      Swal.fire('Created', 'Notification created successfully.', 'success')
-    } catch (error) {
-      console.error('Failed to create notification:', error)
-      Swal.fire('Error', 'Failed to create notification.', 'error')
+  const openCreateNotificationForm = () => {
+    setEditingNotificationId(null)
+    setFormData(createFormState())
+    setFormErrors({})
+    setIsTitleManuallyEdited(false)
+    setIsEditorOpen(true)
+  }
+
+  const openEditNotificationForm = (notification) => {
+    setEditingNotificationId(notification.id)
+    setFormData(createFormState(notification))
+    setFormErrors({})
+    setIsTitleManuallyEdited(true)
+    setIsEditorOpen(true)
+  }
+
+  const handleTypeSelect = (type) => {
+    setFormErrors((prev) => ({ ...prev, type: undefined }))
+    setFormData((prev) => ({
+      ...prev,
+      type,
+      title: isTitleManuallyEdited ? prev.title : getNotificationTitle(type, prev.resource),
+    }))
+  }
+
+  const handleResourceChange = (value) => {
+    setFormErrors((prev) => ({ ...prev, resource: undefined }))
+    setFormData((prev) => ({
+      ...prev,
+      resource: value,
+      title: isTitleManuallyEdited ? prev.title : getNotificationTitle(prev.type, value),
+    }))
+  }
+
+  const handleTitleChange = (value) => {
+    const suggestedTitle = getNotificationTitle(formData.type, formData.resource)
+    setIsTitleManuallyEdited(value.trim() !== '' && value.trim() !== suggestedTitle)
+    setFormErrors((prev) => ({ ...prev, title: undefined }))
+    setFormData((prev) => ({
+      ...prev,
+      title: value,
+    }))
+  }
+
+  const handleMessageChange = (value) => {
+    setFormErrors((prev) => ({ ...prev, message: undefined }))
+    setFormData((prev) => ({
+      ...prev,
+      message: value,
+    }))
+  }
+
+  const submitNotificationForm = async (event) => {
+    event.preventDefault()
+    const errors = validateNotificationForm(formData)
+
+    if (Object.keys(errors).length > 0) {
+      setFormErrors(errors)
+      return
     }
-  }
 
-  const editNotification = async (notification) => {
-    const payload = await promptForNotification(notification)
-    if (!payload) return
+    const payload = {
+      type: formData.type,
+      title: formData.title.trim(),
+      resource: formData.resource.trim(),
+      message: formData.message.trim(),
+      isRead: formData.isRead,
+    }
+
+    if (!editingNotificationId) {
+      const optimisticNotification = buildOptimisticNotification(payload)
+      upsertNotification(optimisticNotification)
+      resetEditor()
+      showToast('success', 'Notification created', 'The notification was added successfully.')
+
+      api
+        .post('/api/notifications', payload)
+        .then(({ data }) => {
+          const created = normalizeNotification(data)
+          setNotifications((prev) =>
+            prev.map((notification) =>
+              notification.id === optimisticNotification.id ? created : notification
+            )
+          )
+          setSelectedNotification((prev) =>
+            prev?.id === optimisticNotification.id ? created : prev
+          )
+        })
+        .catch((error) => {
+          console.error('Failed to persist notification:', error)
+        })
+
+      return
+    }
+
+    setIsSubmittingForm(true)
 
     try {
-      const { data } = await api.put(`/api/notifications/${notification.id}`, payload)
+      const { data } = await api.put(`/api/notifications/${editingNotificationId}`, payload)
       const updated = normalizeNotification(data)
       upsertNotification(updated)
-      Swal.fire('Updated', 'Notification updated successfully.', 'success')
+      resetEditor()
+      showToast('success', 'Notification updated', 'Your changes were saved.')
     } catch (error) {
+      const message = getApiErrorMessage(error, 'Failed to update notification.')
       console.error('Failed to update notification:', error)
-      Swal.fire('Error', 'Failed to update notification.', 'error')
+      showToast('error', 'Update failed', message)
+    } finally {
+      setIsSubmittingForm(false)
     }
   }
 
@@ -368,6 +534,19 @@ const NotificationsPage = () => {
 
   return (
     <div className="notifications-page">
+      {toast && (
+        <div className={`notification-toast ${toast.variant}`}>
+          <div className="notification-toast-accent"></div>
+          <div className="notification-toast-body">
+            <strong>{toast.title}</strong>
+            <span>{toast.message}</span>
+          </div>
+          <button className="notification-toast-close" onClick={() => setToast(null)} aria-label="Close notification">
+            <X size={16} />
+          </button>
+        </div>
+      )}
+
       <div className="notifications-container">
         <div className="notifications-header">
           <div className="notifications-title">
@@ -390,7 +569,7 @@ const NotificationsPage = () => {
               </button>
             )}
             {isAdmin && (
-              <button className="mark-all-btn create-btn" onClick={createNotification}>
+              <button className="mark-all-btn create-btn" onClick={openCreateNotificationForm}>
                 <Plus size={18} />
                 Create notification
               </button>
@@ -580,7 +759,7 @@ const NotificationsPage = () => {
                     )}
                     <button
                       className="action-btn secondary"
-                      onClick={() => editNotification(selectedNotification)}
+                      onClick={() => openEditNotificationForm(selectedNotification)}
                     >
                       <Pencil size={16} />
                       Edit
@@ -608,6 +787,166 @@ const NotificationsPage = () => {
           )}
         </div>
       </div>
+
+      {isAdmin && isEditorOpen && (
+        <div className="notification-editor-modal" role="dialog" aria-modal="true" aria-labelledby="notification-editor-title">
+          <div className="notification-editor-backdrop" onClick={resetEditor}></div>
+          <div className="notification-editor-panel">
+            <div className="notification-editor-panel-header">
+              <div>
+                <p className="notification-editor-eyebrow">Admin composer</p>
+                <h2 id="notification-editor-title">
+                  {editingNotificationId ? 'Update Notification' : 'Create Notification'}
+                </h2>
+                <p className="notification-editor-panel-copy">
+                  Choose a type, add the affected resource, and shape the message before publishing it.
+                </p>
+              </div>
+              <button className="notification-editor-close" onClick={resetEditor} aria-label="Close editor">
+                <X size={18} />
+              </button>
+            </div>
+
+            <form className="notification-editor-form" onSubmit={submitNotificationForm}>
+              <div className="notification-editor-layout">
+                <section className="notification-editor-main">
+                  <div className="notification-editor-section">
+                    <div className="notification-editor-section-head">
+                      <h3>Notification Type</h3>
+                      <span>{Object.keys(NOTIFICATION_TYPES).length} options</span>
+                    </div>
+                    <div className="notification-type-grid">
+                      {Object.entries(NOTIFICATION_TYPES).map(([type, config]) => {
+                        const Icon = config.icon
+                        const isSelected = formData.type === type
+
+                        return (
+                          <button
+                            key={type}
+                            type="button"
+                            className={`notification-type-card ${isSelected ? 'selected' : ''}`}
+                            onClick={() => handleTypeSelect(type)}
+                          >
+                            <div
+                              className="notification-type-card-icon"
+                              style={{ backgroundColor: config.bg, color: config.border }}
+                            >
+                              <Icon size={18} />
+                            </div>
+                            <div className="notification-type-card-copy">
+                              <strong>{config.label}</strong>
+                              <span>{config.description}</span>
+                            </div>
+                          </button>
+                        )
+                      })}
+                    </div>
+                    {formErrors.type && <p className="notification-editor-error">{formErrors.type}</p>}
+                  </div>
+
+                  <div className="notification-editor-fields">
+                    <label className="notification-editor-field">
+                      <span>Related Resource</span>
+                      <input
+                        type="text"
+                        value={formData.resource}
+                        onChange={(event) => handleResourceChange(event.target.value)}
+                        placeholder="Lecture Hall A"
+                      />
+                      <small>Add the room, ticket, facility, or campus area this update belongs to.</small>
+                      {formErrors.resource && <em className="notification-editor-error">{formErrors.resource}</em>}
+                    </label>
+
+                    <label className="notification-editor-field">
+                      <span>Title</span>
+                      <input
+                        type="text"
+                        value={formData.title}
+                        onChange={(event) => handleTitleChange(event.target.value)}
+                        placeholder="Announcement: Lecture Hall A"
+                      />
+                      <small>The title auto-suggests from the selected type until you customize it.</small>
+                      {formErrors.title && <em className="notification-editor-error">{formErrors.title}</em>}
+                    </label>
+
+                    <label className="notification-editor-field">
+                      <span>Message</span>
+                      <textarea
+                        value={formData.message}
+                        onChange={(event) => handleMessageChange(event.target.value)}
+                        placeholder="Write the full notification message here."
+                      />
+                      <small>Use a short first sentence, then include timing, status, or next-step details.</small>
+                      {formErrors.message && <em className="notification-editor-error">{formErrors.message}</em>}
+                    </label>
+
+                    {editingNotificationId && (
+                      <label className="notification-editor-toggle">
+                        <input
+                          type="checkbox"
+                          checked={formData.isRead}
+                          onChange={(event) =>
+                            setFormData((prev) => ({ ...prev, isRead: event.target.checked }))
+                          }
+                        />
+                        <span>Mark this notification as read</span>
+                      </label>
+                    )}
+                  </div>
+                </section>
+
+                <aside className="notification-editor-preview">
+                  <p className="notification-editor-eyebrow">Live preview</p>
+                  <div className="notification-preview-card">
+                    <div
+                      className="notification-preview-icon"
+                      style={{
+                        backgroundColor: NOTIFICATION_TYPES[formData.type]?.bg,
+                        color: NOTIFICATION_TYPES[formData.type]?.border,
+                      }}
+                    >
+                      {(() => {
+                        const PreviewIcon = NOTIFICATION_TYPES[formData.type]?.icon || Bell
+                        return <PreviewIcon size={20} />
+                      })()}
+                    </div>
+                    <div className="notification-preview-content">
+                      <div className="notification-preview-topline">
+                        <span className={`notification-type-badge ${NOTIFICATION_TYPES[formData.type]?.color}`}>
+                          {NOTIFICATION_TYPES[formData.type]?.label}
+                        </span>
+                        <span className="notification-preview-status">
+                          {formData.isRead ? 'Read' : 'Unread'}
+                        </span>
+                      </div>
+                      <h3>{formData.title.trim() || 'Notification title'}</h3>
+                      <p>{formData.message.trim() || 'Your notification preview will appear here as you type.'}</p>
+                      <div className="notification-preview-resource">
+                        {formData.resource.trim() || 'General campus resource'}
+                      </div>
+                    </div>
+                  </div>
+                </aside>
+              </div>
+
+              <div className="notification-editor-actions">
+                <button type="button" className="notification-editor-secondary" onClick={resetEditor}>
+                  Cancel
+                </button>
+                <button type="submit" className="notification-editor-primary" disabled={isSubmittingForm}>
+                  {isSubmittingForm
+                    ? editingNotificationId
+                      ? 'Saving...'
+                      : 'Creating...'
+                    : editingNotificationId
+                      ? 'Save changes'
+                      : 'Create notification'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

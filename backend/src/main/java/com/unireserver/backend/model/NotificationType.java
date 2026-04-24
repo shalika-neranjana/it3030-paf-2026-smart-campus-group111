@@ -26,9 +26,39 @@ public enum NotificationType {
     TICKET_UPDATED("Ticket Updated"),
 
     /**
+     * Sent when maintenance work receives a progress update
+     */
+    MAINTENANCE_UPDATE("Maintenance Update"),
+
+    /**
      * Sent when a new comment is added to a ticket that belongs to the user
      */
-    NEW_COMMENT("New Comment");
+    NEW_COMMENT("New Comment"),
+
+    /**
+     * Sent for campus-wide announcements or broad administrative communication
+     */
+    ANNOUNCEMENT("Announcement"),
+
+    /**
+     * Sent to remind users about upcoming events or deadlines
+     */
+    EVENT_REMINDER("Event Reminder"),
+
+    /**
+     * Sent when a payment is due or requires follow-up
+     */
+    PAYMENT_REMINDER("Payment Reminder"),
+
+    /**
+     * Sent when a user should be made aware of a security-related concern
+     */
+    SECURITY_NOTICE("Security Notice"),
+
+    /**
+     * Sent for urgent platform or infrastructure level issues
+     */
+    SYSTEM_ALERT("System Alert");
 
     private final String displayName;
 
