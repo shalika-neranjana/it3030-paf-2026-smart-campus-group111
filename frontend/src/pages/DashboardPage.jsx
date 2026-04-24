@@ -2,6 +2,8 @@ import { useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { CalendarClock, ClipboardList, Inbox, LayoutDashboard, LifeBuoy, Wrench } from 'lucide-react'
 import { api, resolveApiUrl } from '../lib/api'
+import AdminBookings from './sections/AdminBookings'
+import MyBookings from './sections/MyBookings'
 
 const ADMIN_NAV_ITEMS = [
   { key: 'inbox-messages', label: 'Inbox Messages', icon: Inbox },
@@ -13,6 +15,7 @@ const ADMIN_NAV_ITEMS = [
 
 const DEFAULT_NAV_ITEMS = [
   { key: 'overview', label: 'Overview', icon: LayoutDashboard },
+  { key: 'my-bookings', label: 'My Bookings', icon: CalendarClock },
 ]
 
 const formatRole = (role) => {
@@ -128,11 +131,28 @@ const DashboardPage = () => {
         </aside>
 
         <section className="dashboard-hero">
-          <p className="eyebrow">Dashboard</p>
-          <h1>{navItems.find((item) => item.key === activeSection)?.label || 'Welcome to UniReserver'}</h1>
-          <p className="subtitle">
-            Manage your campus reservations from one place. Your account summary is shown in the header for quick access.
-          </p>
+          {activeSection === 'overview' && (
+            <>
+              <p className="eyebrow">Dashboard</p>
+              <h1>Welcome to UniReserver</h1>
+              <p className="subtitle">
+                Manage your campus reservations from one place. Your account summary is shown in the header for quick access.
+              </p>
+            </>
+          )}
+          {activeSection === 'my-bookings' && (
+            <MyBookings userId={user?.id} />
+          )}
+          {activeSection === 'booking-requests' && (
+            <AdminBookings />
+          )}
+          {activeSection !== 'overview' && activeSection !== 'my-bookings' && activeSection !== 'booking-requests' && (
+            <>
+              <p className="eyebrow">Dashboard</p>
+              <h1>{navItems.find((item) => item.key === activeSection)?.label}</h1>
+              <p className="subtitle">This section is coming soon.</p>
+            </>
+          )}
         </section>
       </main>
     </div>

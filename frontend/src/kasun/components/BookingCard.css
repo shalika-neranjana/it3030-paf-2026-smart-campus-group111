@@ -1,0 +1,76 @@
+.booking-card {
+  background: white;
+  border-radius: 12px;
+  padding: 1.5rem;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+  border-left: 6px solid #e2e8f0;
+  transition: transform 0.2s;
+}
+
+.booking-card:hover {
+  transform: scale(1.02);
+}
+
+.booking-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 1rem;
+}
+
+.booking-card-header h3 {
+  margin: 0;
+  font-size: 1.25rem;
+  color: #2d3748;
+}
+
+.booking-status {
+  font-size: 0.75rem;
+  font-weight: 800;
+  padding: 0.25rem 0.75rem;
+  border-radius: 20px;
+  text-transform: uppercase;
+}
+
+.status-pending { background: #fefcbf; color: #744210; }
+.status-approved { background: #c6f6d5; color: #22543d; border-color: #38a169; }
+.status-rejected { background: #fed7d7; color: #822727; }
+.status-cancelled { background: #edf2f7; color: #4a5568; }
+
+.booking-card-details p {
+  margin: 0.5rem 0;
+  color: #4a5568;
+  font-size: 0.95rem;
+}
+
+.rejection-note {
+  background: #fff5f5;
+  padding: 0.5rem;
+  border-radius: 6px;
+  color: #c53030;
+  font-size: 0.85rem;
+}
+
+.booking-card-actions {
+  margin-top: 1.5rem;
+  display: flex;
+  gap: 0.75rem;
+}
+
+.booking-card-actions button {
+  flex: 1;
+  padding: 0.6rem;
+  border: none;
+  border-radius: 8px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: opacity 0.2s;
+}
+
+.btn-approve { background-color: #48bb78; color: white; }
+.btn-reject { background-color: #f56565; color: white; }
+.btn-cancel-booking { background-color: #edf2f7; color: #4a5568; border: 1px solid #cbd5e0; }
+
+.booking-card-actions button:hover {
+  opacity: 0.9;
+}
