@@ -2,24 +2,14 @@ import { useEffect, useMemo, useState } from 'react'
 import Cropper from 'react-easy-crop'
 import 'react-easy-crop/react-easy-crop.css'
 import { Link, useNavigate } from 'react-router-dom'
-import { showError, showSuccess, showWarning } from '../lib/alerts'
-import { api } from '../lib/api'
+import { showError, showSuccess, showWarning, showConfirm } from '../lib/alerts'
+import { api, resolveApiUrl } from '../lib/api'
 import { cropImageByPixels } from '../lib/image'
 import { formatSriLankanPhoneInput, isValidSriLankanMobile } from '../lib/phone'
 
-const roleOptions = [
-  'ADMINISTRATOR',
-  'MANAGER',
-  'STUDENT',
-  'INSTRUCTOR',
-  'LECTURER',
-  'TECHNICIAN',
-  'STAFF',
-]
-
 const nameRegex = /^[A-Za-z]+(?:[\s'-][A-Za-z]+)*$/
 
-const RegisterPage = () => {
+const ProfileEditPage = () => {
   const navigate = useNavigate()
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [croppedImage, setCroppedImage] = useState(null)
@@ -37,8 +27,29 @@ const RegisterPage = () => {
     phoneNumber: '',
     password: '',
     confirmPassword: '',
-    role: 'STUDENT',
   })
+
+  useEffect(() => {
+    const fetchUserData = async () => {
+      try {
+        const { data } = await api.get('/api/auth/me')
+        setFormData({
+          firstName: data.firstName || '',
+          lastName: data.lastName || '',
+          email: data.email || '',
+          phoneNumber: data.phoneNumber || '',
+          password: '',
+          confirmPassword: '',
+        })
+        if (data.imageUrl) {
+          setImagePreview(resolveApiUrl(data.imageUrl))
+        }
+      } catch (error) {
+        showError('Error', 'Failed to load user profile.')
+      }
+    }
+    fetchUserData()
+  }, [])
 
   useEffect(() => {
     return () => {
@@ -47,14 +58,6 @@ const RegisterPage = () => {
       }
     }
   }, [selectedImageUrl])
-
-  useEffect(() => {
-    return () => {
-      if (imagePreview) {
-        URL.revokeObjectURL(imagePreview)
-      }
-    }
-  }, [imagePreview])
 
   const passwordMatch = useMemo(
     () => !formData.confirmPassword || formData.password === formData.confirmPassword,
@@ -122,11 +125,6 @@ const RegisterPage = () => {
       return false
     }
 
-    if (!croppedImage) {
-      await showWarning('Missing image', 'Please upload a profile image.')
-      return false
-    }
-
     return true
   }
 
@@ -143,30 +141,47 @@ const RegisterPage = () => {
     payload.append('lastName', formData.lastName.trim())
     payload.append('email', formData.email.trim())
     payload.append('phoneNumber', formData.phoneNumber)
-    payload.append('password', formData.password)
-    payload.append('confirmPassword', formData.confirmPassword)
-    payload.append('role', formData.role)
-    payload.append('image', croppedImage)
+    if (formData.password) {
+      payload.append('password', formData.password)
+      payload.append('confirmPassword', formData.confirmPassword)
+    }
+    if (croppedImage) {
+      payload.append('image', croppedImage)
+    }
 
     try {
-      const { data } = await api.post('/api/auth/register', payload)
+      const { data } = await api.put('/api/auth/profile', payload)
       localStorage.setItem('authToken', data.token)
       localStorage.setItem('authUser', JSON.stringify(data))
       window.dispatchEvent(new Event('auth-changed'))
-      await showSuccess('Registration successful', 'Your account has been created successfully.')
+      await showSuccess('Profile updated', 'Your profile has been updated successfully.')
       navigate('/dashboard')
     } catch (error) {
-      const message = error?.response?.data?.message || 'Registration failed. Please try again.'
-
-      if (message.toLowerCase().includes('email is already in use')) {
-        await showWarning('Duplicate email', message)
-      } else if (message.toLowerCase().includes('phone number is already in use')) {
-        await showWarning('Duplicate phone', message)
-      } else {
-        await showError('Registration failed', message)
-      }
+      const message = error?.response?.data?.message || 'Update failed. Please try again.'
+      await showError('Update failed', message)
     } finally {
       setIsSubmitting(false)
+    }
+  }
+
+  const onDeleteProfile = async () => {
+    const result = await showConfirm(
+      'Are you sure?',
+      'You will not be able to recover your account after deletion!',
+      'Yes, delete my profile'
+    )
+
+    if (result.isConfirmed) {
+      try {
+        await api.delete('/api/auth/profile')
+        localStorage.removeItem('authToken')
+        localStorage.removeItem('authUser')
+        window.dispatchEvent(new Event('auth-changed'))
+        await showSuccess('Account deleted', 'Your account has been deleted successfully.')
+        navigate('/login')
+      } catch (error) {
+        await showError('Deletion failed', 'Could not delete your account. Please try again.')
+      }
     }
   }
 
@@ -176,10 +191,10 @@ const RegisterPage = () => {
         <div className="auth-card-content">
           <div className="auth-left">
             <img className="auth-logo" src="/logo.png" alt="UniReserver" />
-            <h1>Create Account</h1>
-            <p className="auth-note">Register to access secure campus resource management.</p>
+            <h1>Edit Profile</h1>
+            <p className="auth-note">Update your account information and profile picture.</p>
             <p className="auth-switch">
-              Already have an account? <Link to="/login">Login</Link>
+              <Link to="/dashboard">Back to Dashboard</Link>
             </p>
           </div>
 
@@ -212,22 +227,19 @@ const RegisterPage = () => {
                 />
               </div>
 
-              
-
               <div className="form-field">
-                <label htmlFor="password">Password <span className="required-star">*</span></label>
-                <input id="password" name="password" type="password" value={formData.password} onChange={onInputChange} required />
+                <label htmlFor="password">New Password (leave blank to keep current)</label>
+                <input id="password" name="password" type="password" value={formData.password} onChange={onInputChange} />
               </div>
 
               <div className="form-field">
-                <label htmlFor="confirmPassword">Confirm Password <span className="required-star">*</span></label>
+                <label htmlFor="confirmPassword">Confirm New Password</label>
                 <input
                   id="confirmPassword"
                   name="confirmPassword"
                   type="password"
                   value={formData.confirmPassword}
                   onChange={onInputChange}
-                  required
                 />
               </div>
 
@@ -238,19 +250,8 @@ const RegisterPage = () => {
               )}
 
               <div className="form-field">
-                <label htmlFor="image">Profile Image (1:1 crop) <span className="required-star">*</span></label>
+                <label htmlFor="image">Profile Image (1:1 crop)</label>
                 <input id="image" name="image" type="file" accept="image/*" onChange={onImageChange} />
-              </div>
-
-              <div className="form-field">
-                <label htmlFor="role">User Role <span className="required-star">*</span></label>
-                <select id="role" name="role" value={formData.role} onChange={onInputChange} required>
-                  {roleOptions.map((role) => (
-                    <option key={role} value={role}>
-                      {role}
-                    </option>
-                  ))}
-                </select>
               </div>
 
               {selectedImageUrl && (
@@ -263,13 +264,21 @@ const RegisterPage = () => {
 
               {imagePreview && (
                 <div className="form-field">
-                  <img className="image-preview" src={imagePreview} alt="Cropped preview" />
+                  <img className="image-preview" src={imagePreview} alt="Profile preview" />
                 </div>
               )}
 
-              <div className="form-field full">
-                <button className="primary-btn full" type="submit" disabled={isSubmitting}>
-                  {isSubmitting ? 'Creating account...' : 'Register'}
+              <div className="form-field full" style={{ display: 'flex', gap: '1rem', marginTop: '1rem' }}>
+                <button className="primary-btn" style={{ flex: 2 }} type="submit" disabled={isSubmitting}>
+                  {isSubmitting ? 'Saving changes...' : 'Save Changes'}
+                </button>
+                <button
+                  className="ghost-btn"
+                  style={{ flex: 1, borderColor: '#d33', color: '#d33' }}
+                  type="button"
+                  onClick={onDeleteProfile}
+                >
+                  Delete Profile
                 </button>
               </div>
             </form>
@@ -325,4 +334,4 @@ const RegisterPage = () => {
   )
 }
 
-export default RegisterPage
+export default ProfileEditPage

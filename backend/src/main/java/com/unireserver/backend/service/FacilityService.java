@@ -33,12 +33,11 @@ public class FacilityService {
         facility.setName(facilityDetails.getName());
         facility.setType(facilityDetails.getType());
         facility.setCapacity(facilityDetails.getCapacity());
-        facility.setLocation(facilityDetails.getLocation());
         facility.setBuilding(facilityDetails.getBuilding());
         facility.setFloorNumber(facilityDetails.getFloorNumber());
         facility.setAvailabilityWindows(facilityDetails.getAvailabilityWindows());
         facility.setStatus(facilityDetails.getStatus());
-        facility.setDescription(facilityDetails.getDescription());
+        facility.setNote(facilityDetails.getNote());
         facility.setImageUrl(facilityDetails.getImageUrl());
         return facilityRepository.save(facility);
     }
@@ -47,13 +46,13 @@ public class FacilityService {
         facilityRepository.deleteById(id);
     }
 
-    public List<Facility> searchFacilities(FacilityType type, Integer minCapacity, String location, FacilityStatus status) {
+    public List<Facility> searchFacilities(FacilityType type, Integer minCapacity, String building, FacilityStatus status) {
         List<Facility> facilities = facilityRepository.findAll();
 
         return facilities.stream()
                 .filter(f -> type == null || f.getType() == type)
                 .filter(f -> minCapacity == null || f.getCapacity() >= minCapacity)
-                .filter(f -> location == null || location.isEmpty() || f.getLocation().toLowerCase().contains(location.toLowerCase()))
+                .filter(f -> building == null || building.isEmpty() || f.getBuilding().equalsIgnoreCase(building))
                 .filter(f -> status == null || f.getStatus() == status)
                 .collect(Collectors.toList());
     }

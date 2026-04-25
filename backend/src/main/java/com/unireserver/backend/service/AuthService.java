@@ -3,6 +3,7 @@ package com.unireserver.backend.service;
 import com.unireserver.backend.dto.AuthResponse;
 import com.unireserver.backend.dto.LoginRequest;
 import com.unireserver.backend.dto.RegisterRequest;
+import com.unireserver.backend.dto.UpdateProfileRequest;
 import com.unireserver.backend.dto.UserProfileResponse;
 import com.unireserver.backend.model.AppUser;
 import com.unireserver.backend.repository.UserRepository;
@@ -148,6 +149,50 @@ public class AuthService {
                 .role(user.getRole())
                 .imageUrl(imageStorageService.toPublicUrl(user.getImageFilename()))
                 .build();
+    }
+
+    public AuthResponse updateProfile(String currentEmail, UpdateProfileRequest request) {
+        AppUser user = userRepository.findByEmail(currentEmail.toLowerCase())
+                .orElseThrow(() -> new UsernameNotFoundException("User not found"));
+
+        String newEmail = request.getEmail().trim().toLowerCase();
+        String normalizedPhone = PhoneNumberUtil.normalizeSriLankanPhone(request.getPhoneNumber());
+
+        if (!user.getEmail().equalsIgnoreCase(newEmail) && userRepository.existsByEmail(newEmail)) {
+            throw new IllegalArgumentException("Email is already in use");
+        }
+        if (!user.getPhoneNumber().equals(normalizedPhone) && userRepository.existsByPhoneNumber(normalizedPhone)) {
+            throw new IllegalArgumentException("Phone number is already in use");
+        }
+
+        user.setFirstName(request.getFirstName().trim());
+        user.setLastName(request.getLastName().trim());
+        user.setEmail(newEmail);
+        user.setPhoneNumber(normalizedPhone);
+
+        if (request.getPassword() != null && !request.getPassword().isEmpty()) {
+            if (!request.getPassword().equals(request.getConfirmPassword())) {
+                throw new IllegalArgumentException("Password and confirm password do not match");
+            }
+            user.setPasswordHash(passwordEncoder.encode(request.getPassword()));
+        }
+
+        if (request.getImage() != null && !request.getImage().isEmpty()) {
+            String imageFilename = imageStorageService.storeProfileImage(request.getImage(), newEmail);
+            user.setImageFilename(imageFilename);
+        }
+
+        user.setUpdatedAt(Instant.now());
+        AppUser savedUser = userRepository.save(user);
+
+        String token = jwtService.generateToken(savedUser);
+        return mapAuthResponse(savedUser, token);
+    }
+
+    public void deleteProfile(String email) {
+        AppUser user = userRepository.findByEmail(email.toLowerCase())
+                .orElseThrow(() -> new UsernameNotFoundException("User not found"));
+        userRepository.delete(user);
     }
 
     private AuthResponse mapAuthResponse(AppUser user, String token) {

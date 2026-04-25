@@ -8,34 +8,30 @@ import lombok.Setter;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
-import java.util.List;
+import java.time.LocalDateTime;
 
 @Getter
 @Setter
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@Document(collection = "facilities")
-public class Facility {
+@Document(collection = "messages")
+public class Message {
 
     @Id
     private String id;
 
-    private String name;
+    private String senderId; // Optional sender
 
-    private FacilityType type;
+    private String receiverId; // Required receiver
 
-    private Integer capacity;
-    
-    private String building;
+    private LocalDateTime sentAt;
 
-    private Integer floorNumber;
+    private boolean isRead;
 
-    private List<String> availabilityWindows;
+    private LocalDateTime readAt;
 
-    private FacilityStatus status;
+    private String title;
 
-    private String note;
-
-    private String imageUrl;
+    private String body;
 }

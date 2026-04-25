@@ -10,6 +10,6 @@ import java.util.List;
 @Repository
 public interface FacilityRepository extends MongoRepository<Facility, String> {
     List<Facility> findByType(FacilityType type);
-    List<Facility> findByLocationContainingIgnoreCase(String location);
+    List<Facility> findByBuildingContainingIgnoreCase(String building);
     List<Facility> findByCapacityGreaterThanEqual(Integer capacity);
 }

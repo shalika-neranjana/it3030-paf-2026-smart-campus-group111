@@ -7,8 +7,10 @@ import ManageResources from './ManageResources'
 import BookingManagement from './BookingManagement'
 import MaintenanceTicketing from './MaintenanceTicketing'
 
+import InboxPage from './InboxPage'
+
 const ADMIN_NAV_ITEMS = [
-  { key: 'inbox-messages', label: 'Inbox Messages', icon: Inbox },
+  { key: 'inbox-messages', label: 'Inbox', icon: Inbox },
   { key: 'booking-requests', label: 'Booking Requests', icon: ClipboardList },
   { key: 'support-tickets', label: 'Support Tickets', icon: LifeBuoy },
   { key: 'timetable', label: 'Timetable', icon: CalendarClock },
@@ -40,6 +42,7 @@ const isAdminRole = (role) => {
 
 const DashboardPage = () => {
   const navigate = useNavigate()
+  const [unreadCount, setUnreadCount] = useState(0)
   const [user, setUser] = useState(() => {
     try {
       const storedUser = localStorage.getItem('authUser')
@@ -64,6 +67,21 @@ const DashboardPage = () => {
     if (localStorage.getItem('authToken')) {
       fetchProfile()
     }
+
+    const fetchUnreadCount = async () => {
+      try {
+        const { data } = await api.get('/api/messages/unread-count')
+        setUnreadCount(data.count)
+      } catch (error) {
+        console.error('Failed to fetch unread count:', error)
+      }
+    }
+
+    if (localStorage.getItem('authToken')) {
+      fetchUnreadCount()
+      const interval = setInterval(fetchUnreadCount, 30000) // Refresh every 30s
+      return () => clearInterval(interval)
+    }
   }, [])
 
   const displayName = [user?.firstName, user?.lastName].filter(Boolean).join(' ') || 'Logged in user'
@@ -85,6 +103,8 @@ const DashboardPage = () => {
 
   const renderActiveSection = () => {
     switch (activeSection) {
+      case 'inbox-messages':
+        return <InboxPage onMessageRead={() => setUnreadCount((prev) => Math.max(0, prev - 1))} />
       case 'manage-resources':
         return <ManageResources isReadOnly={false} />
       case 'view-resources':
@@ -129,20 +149,22 @@ const DashboardPage = () => {
         </Link>
 
         <div className="dashboard-user-area">
-          <div className="dashboard-user-meta">
+          <Link className="dashboard-user-meta" to="/profile" style={{ textDecoration: 'none', color: 'inherit' }}>
             <p className="dashboard-user-name">{displayName}</p>
             <p className="dashboard-user-role">{displayRole}</p>
-          </div>
+          </Link>
 
-          <img
-            className="dashboard-user-avatar"
-            src={profileImage}
-            alt={`${displayName} profile`}
-            onError={(event) => {
-              event.currentTarget.onerror = null
-              event.currentTarget.src = '/logo.png'
-            }}
-          />
+          <Link to="/profile">
+            <img
+              className="dashboard-user-avatar"
+              src={profileImage}
+              alt={`${displayName} profile`}
+              onError={(event) => {
+                event.currentTarget.onerror = null
+                event.currentTarget.src = '/logo.png'
+              }}
+            />
+          </Link>
 
           <button className="logout-btn" type="button" onClick={onLogout}>
             Logout
@@ -166,7 +188,12 @@ const DashboardPage = () => {
                   onClick={() => setActiveSection(item.key)}
                 >
                   <Icon className="dashboard-nav-icon" size={18} strokeWidth={2.1} aria-hidden="true" />
-                  <span>{item.label}</span>
+                  <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%' }}>
+                    {item.label}
+                    {item.key === 'inbox-messages' && unreadCount > 0 && (
+                      <span className="unread-count-badge">{unreadCount}</span>
+                    )}
+                  </span>
                 </button>
               )
             })}

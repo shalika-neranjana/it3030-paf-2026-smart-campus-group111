@@ -7,6 +7,7 @@ This project is a full-stack Smart Campus Management System built with Spring Bo
 - Facility and asset catalog (rooms, labs, equipment)
 - Resource booking with conflict handling and approval flow
 - Maintenance and incident ticketing with image uploads
+- Inbox Messaging system with markdown support
 - Real-time notification support
 - Secure authentication and role-based authorization
 

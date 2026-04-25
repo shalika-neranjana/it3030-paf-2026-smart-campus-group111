@@ -23,9 +23,10 @@ public class DataInitializer implements CommandLineRunner {
                     .name("Main Lecture Hall")
                     .type(FacilityType.LECTURE_HALL)
                     .capacity(250)
-                    .location("Block A, Level 1")
+                    .building("Main Building")
+                    .floorNumber(1)
                     .status(FacilityStatus.ACTIVE)
-                    .description("Spacious lecture hall with advanced audio-visual systems.")
+                    .note("Spacious lecture hall with advanced audio-visual systems.")
                     .availabilityWindows(Arrays.asList("08:00-12:00", "13:00-17:00"))
                     .build();
 
@@ -33,9 +34,10 @@ public class DataInitializer implements CommandLineRunner {
                     .name("Advanced Computing Lab")
                     .type(FacilityType.LAB)
                     .capacity(50)
-                    .location("Block C, Level 3")
+                    .building("Engineering faculty Building")
+                    .floorNumber(3)
                     .status(FacilityStatus.ACTIVE)
-                    .description("High-performance workstations for AI and Data Science.")
+                    .note("High-performance workstations for AI and Data Science.")
                     .availabilityWindows(Arrays.asList("09:00-18:00"))
                     .build();
 
@@ -43,9 +45,10 @@ public class DataInitializer implements CommandLineRunner {
                     .name("Portable 4K Projector")
                     .type(FacilityType.EQUIPMENT)
                     .capacity(1)
-                    .location("Media Center")
+                    .building("New Academic Building")
+                    .floorNumber(0)
                     .status(FacilityStatus.OUT_OF_SERVICE)
-                    .description("High-resolution portable projector for seminars.")
+                    .note("High-resolution portable projector for seminars.")
                     .availabilityWindows(Arrays.asList("08:00-20:00"))
                     .build();
 

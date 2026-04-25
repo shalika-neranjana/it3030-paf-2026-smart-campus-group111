@@ -6,6 +6,7 @@ import HomePage from './pages/HomePage'
 import LoginPage from './pages/LoginPage'
 import RegisterPage from './pages/RegisterPage'
 import FacilitiesPage from './pages/FacilitiesPage'
+import ProfileEditPage from './pages/ProfileEditPage'
 
 const hasAuthToken = () => Boolean(localStorage.getItem('authToken'))
 
@@ -34,6 +35,10 @@ const App = () => {
       <Route
         path="/dashboard"
         element={isAuthenticated ? <DashboardPage /> : <Navigate to="/login" replace />}
+      />
+      <Route
+        path="/profile"
+        element={isAuthenticated ? <ProfileEditPage /> : <Navigate to="/login" replace />}
       />
       <Route path="/facilities" element={<FacilitiesPage />} />
       <Route path="*" element={<Navigate to="/" replace />} />

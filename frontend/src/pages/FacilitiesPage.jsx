@@ -5,7 +5,6 @@ import {
   LayoutGrid, 
   List as ListIcon, 
   Plus, 
-  MapPin, 
   Users, 
   Building2, 
   Layers, 
@@ -14,11 +13,19 @@ import {
   X,
   Info
 } from 'lucide-react'
-import { api, resolveApiUrl } from '../lib/api'
+import Swal from 'sweetalert2'
+import { api } from '../lib/api'
 import BookingModal from './BookingModal'
 
 const FACILITY_TYPES = ['LECTURE_HALL', 'LAB', 'MEETING_ROOM', 'EQUIPMENT', 'SPECIAL']
 const FACILITY_STATUSES = ['ACTIVE', 'OUT_OF_SERVICE']
+const BUILDINGS = [
+  'Main Building',
+  'Engineering faculty Building',
+  'Business faculty building',
+  'New Academic Building',
+  'William Angliss Building'
+]
 
 const isAdminRole = (role) => {
   if (!role) return false
@@ -35,7 +42,7 @@ const FacilitiesPage = () => {
   // Filters state
   const [searchQuery, setSearchQuery] = useState('')
   const [filterType, setFilterType] = useState('')
-  const [filterLocation, setFilterLocation] = useState('')
+  const [filterBuilding, setFilterBuilding] = useState('')
   const [minCapacity, setMinCapacity] = useState('')
 
   // User state for roles
@@ -54,12 +61,11 @@ const FacilitiesPage = () => {
   const [formData, setFormData] = useState({
     name: '',
     type: 'LECTURE_HALL',
-    location: '',
-    building: '',
+    building: BUILDINGS[0],
     floorNumber: '',
     capacity: '',
     status: 'ACTIVE',
-    description: '',
+    note: '',
     imageUrl: ''
   })
 
@@ -72,18 +78,16 @@ const FacilitiesPage = () => {
     try {
       const params = {}
       if (filterType) params.type = filterType
+      if (filterBuilding) params.building = filterBuilding
       if (minCapacity) params.minCapacity = minCapacity
-      if (filterLocation) params.location = filterLocation
 
       const { data } = await api.get('/api/facilities', { params })
       
-      // Client-side search for name if needed, or backend can handle it.
-      // Current backend only handles type, capacity, location.
       let filtered = data
       if (searchQuery) {
         filtered = data.filter(f => 
           f.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          f.description?.toLowerCase().includes(searchQuery.toLowerCase())
+          f.note?.toLowerCase().includes(searchQuery.toLowerCase())
         )
       }
       
@@ -98,7 +102,7 @@ const FacilitiesPage = () => {
 
   useEffect(() => {
     fetchFacilities()
-  }, [filterType, minCapacity, filterLocation])
+  }, [filterType, filterBuilding, minCapacity])
 
   // Debounced search
   useEffect(() => {
@@ -114,12 +118,11 @@ const FacilitiesPage = () => {
       setFormData({
         name: facility.name || '',
         type: facility.type || 'LECTURE_HALL',
-        location: facility.location || '',
-        building: facility.building || '',
+        building: facility.building || BUILDINGS[0],
         floorNumber: facility.floorNumber || '',
         capacity: facility.capacity || '',
         status: facility.status || 'ACTIVE',
-        description: facility.description || '',
+        note: facility.note || '',
         imageUrl: facility.imageUrl || ''
       })
     } else {
@@ -127,12 +130,11 @@ const FacilitiesPage = () => {
       setFormData({
         name: '',
         type: 'LECTURE_HALL',
-        location: '',
-        building: '',
+        building: BUILDINGS[0],
         floorNumber: '',
         capacity: '',
         status: 'ACTIVE',
-        description: '',
+        note: '',
         imageUrl: ''
       })
     }
@@ -154,25 +156,63 @@ const FacilitiesPage = () => {
     try {
       if (editingFacility) {
         await api.put(`/api/facilities/${editingFacility.id}`, formData)
+        Swal.fire({
+          icon: 'success',
+          title: 'Updated!',
+          text: 'Resource has been updated successfully.',
+          timer: 2000,
+          showConfirmButton: false
+        })
       } else {
         await api.post('/api/facilities', formData)
+        Swal.fire({
+          icon: 'success',
+          title: 'Created!',
+          text: 'New resource has been created successfully.',
+          timer: 2000,
+          showConfirmButton: false
+        })
       }
       handleCloseModal()
       fetchFacilities()
     } catch (err) {
-      alert('Failed to save facility. Please check your permissions.')
+      Swal.fire({
+        icon: 'error',
+        title: 'Error',
+        text: 'Failed to save facility. Please check your permissions.'
+      })
       console.error(err)
     }
   }
 
   const handleDelete = async (id) => {
-    if (!window.confirm('Are you sure you want to delete this resource?')) return
-    try {
-      await api.delete(`/api/facilities/${id}`)
-      fetchFacilities()
-    } catch (err) {
-      alert('Failed to delete facility.')
-      console.error(err)
+    const result = await Swal.fire({
+      title: 'Are you sure?',
+      text: "You won't be able to revert this!",
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#d33',
+      cancelButtonColor: '#3085d6',
+      confirmButtonText: 'Yes, delete it!'
+    })
+
+    if (result.isConfirmed) {
+      try {
+        await api.delete(`/api/facilities/${id}`)
+        Swal.fire(
+          'Deleted!',
+          'Resource has been deleted.',
+          'success'
+        )
+        fetchFacilities()
+      } catch (err) {
+        Swal.fire({
+          icon: 'error',
+          title: 'Error',
+          text: 'Failed to delete facility.'
+        })
+        console.error(err)
+      }
     }
   }
 
@@ -208,7 +248,7 @@ const FacilitiesPage = () => {
             <Search className="search-icon" size={20} />
             <input 
               type="text" 
-              placeholder="Search by name or description..." 
+              placeholder="Search by name or note..." 
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
             />
@@ -228,14 +268,13 @@ const FacilitiesPage = () => {
 
             <select 
               className="filter-select" 
-              value={filterLocation} 
-              onChange={(e) => setFilterLocation(e.target.value)}
+              value={filterBuilding} 
+              onChange={(e) => setFilterBuilding(e.target.value)}
             >
-              <option value="">All Locations</option>
-              <option value="Main Campus">Main Campus</option>
-              <option value="Engineering Block">Engineering Block</option>
-              <option value="Science Wing">Science Wing</option>
-              <option value="Arts Building">Arts Building</option>
+              <option value="">All Buildings</option>
+              {BUILDINGS.map(b => (
+                <option key={b} value={b}>{b}</option>
+              ))}
             </select>
 
             <input 
@@ -303,10 +342,9 @@ const FacilitiesPage = () => {
                 <div className="facility-info">
                   <div className="facility-meta">
                     <span className="facility-tag tag-type">{facility.type?.replace('_', ' ')}</span>
-                    <span className="facility-tag tag-location">{facility.location}</span>
                   </div>
                   <h3>{facility.name}</h3>
-                  <p className="facility-description">{facility.description || 'No description available for this resource.'}</p>
+                  <p className="facility-description">{facility.note || 'No notes available for this resource.'}</p>
                   
                   <div className="facility-details-mini">
                     <div className="detail-item">
@@ -344,7 +382,6 @@ const FacilitiesPage = () => {
                 <tr>
                   <th>Resource</th>
                   <th>Type</th>
-                  <th>Location</th>
                   <th>Capacity</th>
                   <th>Status</th>
                   <th>Actions</th>
@@ -367,7 +404,6 @@ const FacilitiesPage = () => {
                       </div>
                     </td>
                     <td><span className="facility-tag tag-type">{facility.type?.replace('_', ' ')}</span></td>
-                    <td>{facility.location}</td>
                     <td>{facility.capacity}</td>
                     <td>
                       <span className={`status-badge status-${facility.status?.toLowerCase()}`} style={{ position: 'static' }}>
@@ -441,23 +477,12 @@ const FacilitiesPage = () => {
                     </select>
                   </div>
                   <div className="form-group">
-                    <label>Location</label>
-                    <input 
-                      name="location" 
-                      value={formData.location} 
-                      onChange={handleInputChange} 
-                      placeholder="e.g. Main Campus" 
-                      required 
-                    />
-                  </div>
-                  <div className="form-group">
                     <label>Building</label>
-                    <input 
-                      name="building" 
-                      value={formData.building} 
-                      onChange={handleInputChange} 
-                      placeholder="e.g. Block C" 
-                    />
+                    <select name="building" value={formData.building} onChange={handleInputChange}>
+                      {BUILDINGS.map(b => (
+                        <option key={b} value={b}>{b}</option>
+                      ))}
+                    </select>
                   </div>
                   <div className="form-group">
                     <label>Floor Number</label>
@@ -490,10 +515,10 @@ const FacilitiesPage = () => {
                     />
                   </div>
                   <div className="form-group full-width">
-                    <label>Description</label>
+                    <label>Note</label>
                     <textarea 
-                      name="description" 
-                      value={formData.description} 
+                      name="note" 
+                      value={formData.note} 
                       onChange={handleInputChange} 
                       placeholder="Provide details about equipment, specialized features, etc."
                     ></textarea>
@@ -517,7 +542,11 @@ const FacilitiesPage = () => {
         onClose={() => setIsBookingModalOpen(false)}
         facility={selectedFacilityForBooking}
         onSuccess={() => {
-          alert('Booking request submitted successfully! You can track its status in your dashboard.')
+          Swal.fire({
+            icon: 'success',
+            title: 'Booking Submitted',
+            text: 'Booking request submitted successfully! You can track its status in your dashboard.'
+          })
         }}
       />
     </div>
@@ -525,3 +554,4 @@ const FacilitiesPage = () => {
 }
 
 export default FacilitiesPage
+
