@@ -26,8 +26,6 @@ public class Facility {
     private FacilityType type;
 
     private Integer capacity;
-
-    private String location;
     
     private String building;
 
@@ -37,7 +35,7 @@ public class Facility {
 
     private FacilityStatus status;
 
-    private String description;
+    private String note;
 
     private String imageUrl;
 }

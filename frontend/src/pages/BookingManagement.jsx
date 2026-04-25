@@ -15,6 +15,7 @@ import {
   MessageSquare,
   Ban
 } from 'lucide-react'
+import Swal from 'sweetalert2'
 import { api } from '../lib/api'
 
 const BookingManagement = ({ mode = 'my' }) => { // 'my' or 'all'
@@ -46,9 +47,19 @@ const BookingManagement = ({ mode = 'my' }) => { // 'my' or 'all'
   const handleApprove = async (id) => {
     try {
       await api.put(`/api/bookings/${id}/approve`)
+      Swal.fire({
+        icon: 'success',
+        title: 'Booking Approved',
+        timer: 1500,
+        showConfirmButton: false
+      })
       fetchBookings()
     } catch (err) {
-      alert('Failed to approve booking.')
+      Swal.fire({
+        icon: 'error',
+        title: 'Approval Failed',
+        text: 'Failed to approve booking.'
+      })
     }
   }
 
@@ -56,19 +67,49 @@ const BookingManagement = ({ mode = 'my' }) => { // 'my' or 'all'
     try {
       await api.put(`/api/bookings/${rejectionModal.bookingId}/reject`, { reason: rejectionModal.reason })
       setRejectionModal({ open: false, bookingId: '', reason: '' })
+      Swal.fire({
+        icon: 'success',
+        title: 'Booking Rejected',
+        timer: 1500,
+        showConfirmButton: false
+      })
       fetchBookings()
     } catch (err) {
-      alert('Failed to reject booking.')
+      Swal.fire({
+        icon: 'error',
+        title: 'Rejection Failed',
+        text: 'Failed to reject booking.'
+      })
     }
   }
 
   const handleCancel = async (id) => {
-    if (!window.confirm('Are you sure you want to cancel this booking?')) return
-    try {
-      await api.put(`/api/bookings/${id}/cancel`)
-      fetchBookings()
-    } catch (err) {
-      alert('Failed to cancel booking.')
+    const result = await Swal.fire({
+      title: 'Are you sure?',
+      text: "Do you really want to cancel this booking?",
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#d33',
+      cancelButtonColor: '#3085d6',
+      confirmButtonText: 'Yes, cancel it!'
+    })
+
+    if (result.isConfirmed) {
+      try {
+        await api.put(`/api/bookings/${id}/cancel`)
+        Swal.fire(
+          'Cancelled!',
+          'Your booking has been cancelled.',
+          'success'
+        )
+        fetchBookings()
+      } catch (err) {
+        Swal.fire({
+          icon: 'error',
+          title: 'Cancellation Failed',
+          text: 'Failed to cancel booking.'
+        })
+      }
     }
   }
 

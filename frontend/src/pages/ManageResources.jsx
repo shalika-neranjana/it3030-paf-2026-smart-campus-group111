@@ -8,11 +8,19 @@ import {
   Loader2,
   AlertCircle
 } from 'lucide-react'
+import Swal from 'sweetalert2'
 import { api } from '../lib/api'
 import BookingModal from './BookingModal'
 
 const FACILITY_TYPES = ['LECTURE_HALL', 'LAB', 'MEETING_ROOM', 'EQUIPMENT', 'SPECIAL']
 const FACILITY_STATUSES = ['ACTIVE', 'OUT_OF_SERVICE']
+const BUILDINGS = [
+  'Main Building',
+  'Engineering faculty Building',
+  'Business faculty building',
+  'New Academic Building',
+  'William Angliss Building'
+]
 
 const ManageResources = ({ isReadOnly = false }) => {
   const [facilities, setFacilities] = useState([])
@@ -20,7 +28,7 @@ const ManageResources = ({ isReadOnly = false }) => {
   const [error, setError] = useState(null)
   const [searchQuery, setSearchQuery] = useState('')
   const [filterType, setFilterType] = useState('')
-  const [filterLocation, setFilterLocation] = useState('')
+  const [filterBuilding, setFilterBuilding] = useState('')
   const [filterStatus, setFilterStatus] = useState('')
   const [minCapacity, setMinCapacity] = useState('')
   
@@ -30,12 +38,11 @@ const ManageResources = ({ isReadOnly = false }) => {
   const [formData, setFormData] = useState({
     name: '',
     type: 'LECTURE_HALL',
-    location: '',
-    building: '',
+    building: BUILDINGS[0],
     floorNumber: '',
     capacity: '',
     status: 'ACTIVE',
-    description: '',
+    note: '',
     imageUrl: ''
   })
 
@@ -48,8 +55,8 @@ const ManageResources = ({ isReadOnly = false }) => {
     try {
       const params = {}
       if (filterType) params.type = filterType
+      if (filterBuilding) params.building = filterBuilding
       if (minCapacity) params.minCapacity = minCapacity
-      if (filterLocation) params.location = filterLocation
       if (filterStatus) params.status = filterStatus
 
       const { data } = await api.get('/api/facilities', { params })
@@ -64,11 +71,11 @@ const ManageResources = ({ isReadOnly = false }) => {
 
   useEffect(() => {
     fetchFacilities()
-  }, [filterType, minCapacity, filterLocation, filterStatus])
+  }, [filterType, filterBuilding, minCapacity, filterStatus])
 
   const filteredFacilities = facilities.filter(f => 
     f.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    f.description?.toLowerCase().includes(searchQuery.toLowerCase())
+    f.note?.toLowerCase().includes(searchQuery.toLowerCase())
   )
 
   const handleOpenModal = (facility = null) => {
@@ -78,12 +85,11 @@ const ManageResources = ({ isReadOnly = false }) => {
       setFormData({
         name: facility.name || '',
         type: facility.type || 'LECTURE_HALL',
-        location: facility.location || '',
-        building: facility.building || '',
+        building: facility.building || BUILDINGS[0],
         floorNumber: facility.floorNumber || '',
         capacity: facility.capacity || '',
         status: facility.status || 'ACTIVE',
-        description: facility.description || '',
+        note: facility.note || '',
         imageUrl: facility.imageUrl || ''
       })
     } else {
@@ -91,12 +97,11 @@ const ManageResources = ({ isReadOnly = false }) => {
       setFormData({
         name: '',
         type: 'LECTURE_HALL',
-        location: '',
-        building: '',
+        building: BUILDINGS[0],
         floorNumber: '',
         capacity: '',
         status: 'ACTIVE',
-        description: '',
+        note: '',
         imageUrl: ''
       })
     }
@@ -119,26 +124,65 @@ const ManageResources = ({ isReadOnly = false }) => {
     try {
       if (editingFacility) {
         await api.put(`/api/facilities/${editingFacility.id}`, formData)
+        Swal.fire({
+          icon: 'success',
+          title: 'Resource Updated',
+          text: 'Resource details have been successfully updated.',
+          timer: 2000,
+          showConfirmButton: false
+        })
       } else {
         await api.post('/api/facilities', formData)
+        Swal.fire({
+          icon: 'success',
+          title: 'Resource Added',
+          text: 'New resource has been added to the catalogue.',
+          timer: 2000,
+          showConfirmButton: false
+        })
       }
       handleCloseModal()
       fetchFacilities()
     } catch (err) {
-      alert('Failed to save resource.')
+      Swal.fire({
+        icon: 'error',
+        title: 'Save Failed',
+        text: 'Failed to save resource. Please try again.'
+      })
       console.error(err)
     }
   }
 
   const handleDelete = async (id) => {
     if (isReadOnly) return
-    if (!window.confirm('Permanently delete this resource?')) return
-    try {
-      await api.delete(`/api/facilities/${id}`)
-      fetchFacilities()
-    } catch (err) {
-      alert('Failed to delete resource.')
-      console.error(err)
+    
+    const result = await Swal.fire({
+      title: 'Are you sure?',
+      text: "You won't be able to revert this!",
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#d33',
+      cancelButtonColor: '#3085d6',
+      confirmButtonText: 'Yes, delete it!'
+    })
+
+    if (result.isConfirmed) {
+      try {
+        await api.delete(`/api/facilities/${id}`)
+        Swal.fire(
+          'Deleted!',
+          'Resource has been deleted.',
+          'success'
+        )
+        fetchFacilities()
+      } catch (err) {
+        Swal.fire({
+          icon: 'error',
+          title: 'Delete Failed',
+          text: 'Failed to delete resource.'
+        })
+        console.error(err)
+      }
     }
   }
 
@@ -168,7 +212,7 @@ const ManageResources = ({ isReadOnly = false }) => {
           <Search className="search-icon" size={20} />
           <input 
             type="text" 
-            placeholder="Filter resources by name..." 
+            placeholder="Filter resources by name or note..." 
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
           />
@@ -188,13 +232,13 @@ const ManageResources = ({ isReadOnly = false }) => {
 
           <select 
             className="filter-select" 
-            value={filterLocation} 
-            onChange={(e) => setFilterLocation(e.target.value)}
+            value={filterBuilding} 
+            onChange={(e) => setFilterBuilding(e.target.value)}
           >
-            <option value="">All Locations</option>
-            <option value="Main Campus">Main Campus</option>
-            <option value="Engineering Block">Engineering Block</option>
-            <option value="Science Wing">Science Wing</option>
+            <option value="">All Buildings</option>
+            {BUILDINGS.map(b => (
+              <option key={b} value={b}>{b}</option>
+            ))}
           </select>
 
           <select 
@@ -248,7 +292,7 @@ const ManageResources = ({ isReadOnly = false }) => {
                     <div className="table-facility-name">
                       <div className="name-cell">
                         <h4>{facility.name}</h4>
-                        <p>{facility.location} • {facility.building}</p>
+                        <p>{facility.building}</p>
                       </div>
                     </div>
                   </td>
@@ -325,27 +369,23 @@ const ManageResources = ({ isReadOnly = false }) => {
                   </div>
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
                     <div className="form-group">
-                      <label>Location</label>
-                      <input name="location" value={formData.location} onChange={handleInputChange} required />
-                    </div>
-                    <div className="form-group">
                       <label>Building</label>
-                      <input name="building" value={formData.building} onChange={handleInputChange} />
+                      <select name="building" value={formData.building} onChange={handleInputChange}>
+                        {BUILDINGS.map(b => <option key={b} value={b}>{b}</option>)}
+                      </select>
                     </div>
-                  </div>
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
                     <div className="form-group">
                       <label>Floor</label>
                       <input type="number" name="floorNumber" value={formData.floorNumber} onChange={handleInputChange} />
                     </div>
-                    <div className="form-group">
-                      <label>Capacity</label>
-                      <input type="number" name="capacity" value={formData.capacity} onChange={handleInputChange} required />
-                    </div>
                   </div>
                   <div className="form-group">
-                    <label>Description</label>
-                    <textarea name="description" value={formData.description} onChange={handleInputChange}></textarea>
+                    <label>Capacity</label>
+                    <input type="number" name="capacity" value={formData.capacity} onChange={handleInputChange} required />
+                  </div>
+                  <div className="form-group">
+                    <label>Note</label>
+                    <textarea name="note" value={formData.note} onChange={handleInputChange} placeholder="Add any special notes here..."></textarea>
                   </div>
                 </div>
               </div>
@@ -364,7 +404,11 @@ const ManageResources = ({ isReadOnly = false }) => {
         onClose={() => setIsBookingModalOpen(false)}
         facility={selectedFacilityForBooking}
         onSuccess={() => {
-          alert('Booking request submitted successfully! You can track its status in your dashboard.')
+          Swal.fire({
+            icon: 'success',
+            title: 'Booking Submitted',
+            text: 'Booking request submitted successfully! You can track its status in your dashboard.'
+          })
         }}
       />
     </div>
@@ -372,3 +416,4 @@ const ManageResources = ({ isReadOnly = false }) => {
 }
 
 export default ManageResources
+

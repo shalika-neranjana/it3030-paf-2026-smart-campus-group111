@@ -23,10 +23,10 @@ public class FacilityController {
     public List<Facility> getAllFacilities(
             @RequestParam(required = false) FacilityType type,
             @RequestParam(required = false) Integer minCapacity,
-            @RequestParam(required = false) String location,
+            @RequestParam(required = false) String building,
             @RequestParam(required = false) FacilityStatus status) {
-        if (type != null || minCapacity != null || location != null || status != null) {
-            return facilityService.searchFacilities(type, minCapacity, location, status);
+        if (type != null || minCapacity != null || building != null || status != null) {
+            return facilityService.searchFacilities(type, minCapacity, building, status);
         }
         return facilityService.getAllFacilities();
     }
