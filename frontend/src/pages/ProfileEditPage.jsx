@@ -201,22 +201,22 @@ const ProfileEditPage = () => {
           <div className="auth-right">
             <form className="auth-form register-form" onSubmit={onSubmit}>
               <div className="form-field">
-                <label htmlFor="firstName">First Name</label>
+                <label htmlFor="firstName">First Name <span className="required-star">*</span></label>
                 <input id="firstName" name="firstName" value={formData.firstName} onChange={onInputChange} required />
               </div>
 
               <div className="form-field">
-                <label htmlFor="lastName">Last Name</label>
+                <label htmlFor="lastName">Last Name <span className="required-star">*</span></label>
                 <input id="lastName" name="lastName" value={formData.lastName} onChange={onInputChange} required />
               </div>
 
               <div className="form-field">
-                <label htmlFor="email">Email Address</label>
+                <label htmlFor="email">Email Address <span className="required-star">*</span></label>
                 <input id="email" name="email" type="email" value={formData.email} onChange={onInputChange} required />
               </div>
 
               <div className="form-field">
-                <label htmlFor="phoneNumber">Phone Number</label>
+                <label htmlFor="phoneNumber">Phone Number <span className="required-star">*</span></label>
                 <input
                   id="phoneNumber"
                   name="phoneNumber"

@@ -67,7 +67,7 @@ const LoginPage = () => {
         <p className="auth-note">Use your UniReserver account credentials.</p>
 
         <form className="auth-form" onSubmit={onSubmit}>
-          <label htmlFor="email">Email Address</label>
+          <label htmlFor="email">Email Address <span className="required-star">*</span></label>
           <input
             id="email"
             name="email"
@@ -77,7 +77,7 @@ const LoginPage = () => {
             required
           />
 
-          <label htmlFor="password">Password</label>
+          <label htmlFor="password">Password <span className="required-star">*</span></label>
           <input
             id="password"
             name="password"

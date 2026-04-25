@@ -293,6 +293,12 @@
   font-size: 0.85rem;
 }
 
+.required-star {
+  color: #d33;
+  margin-left: 2px;
+  font-weight: bold;
+}
+
 .image-preview {
   width: 128px;
   height: 128px;

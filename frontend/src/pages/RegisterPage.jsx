@@ -186,22 +186,22 @@ const RegisterPage = () => {
           <div className="auth-right">
             <form className="auth-form register-form" onSubmit={onSubmit}>
               <div className="form-field">
-                <label htmlFor="firstName">First Name</label>
+                <label htmlFor="firstName">First Name <span className="required-star">*</span></label>
                 <input id="firstName" name="firstName" value={formData.firstName} onChange={onInputChange} required />
               </div>
 
               <div className="form-field">
-                <label htmlFor="lastName">Last Name</label>
+                <label htmlFor="lastName">Last Name <span className="required-star">*</span></label>
                 <input id="lastName" name="lastName" value={formData.lastName} onChange={onInputChange} required />
               </div>
 
               <div className="form-field">
-                <label htmlFor="email">Email Address</label>
+                <label htmlFor="email">Email Address <span className="required-star">*</span></label>
                 <input id="email" name="email" type="email" value={formData.email} onChange={onInputChange} required />
               </div>
 
               <div className="form-field">
-                <label htmlFor="phoneNumber">Phone Number</label>
+                <label htmlFor="phoneNumber">Phone Number <span className="required-star">*</span></label>
                 <input
                   id="phoneNumber"
                   name="phoneNumber"
@@ -215,12 +215,12 @@ const RegisterPage = () => {
               
 
               <div className="form-field">
-                <label htmlFor="password">Password</label>
+                <label htmlFor="password">Password <span className="required-star">*</span></label>
                 <input id="password" name="password" type="password" value={formData.password} onChange={onInputChange} required />
               </div>
 
               <div className="form-field">
-                <label htmlFor="confirmPassword">Confirm Password</label>
+                <label htmlFor="confirmPassword">Confirm Password <span className="required-star">*</span></label>
                 <input
                   id="confirmPassword"
                   name="confirmPassword"
@@ -238,12 +238,12 @@ const RegisterPage = () => {
               )}
 
               <div className="form-field">
-                <label htmlFor="image">Profile Image (1:1 crop)</label>
+                <label htmlFor="image">Profile Image (1:1 crop) <span className="required-star">*</span></label>
                 <input id="image" name="image" type="file" accept="image/*" onChange={onImageChange} />
               </div>
 
               <div className="form-field">
-                <label htmlFor="role">User Role</label>
+                <label htmlFor="role">User Role <span className="required-star">*</span></label>
                 <select id="role" name="role" value={formData.role} onChange={onInputChange} required>
                   {roleOptions.map((role) => (
                     <option key={role} value={role}>

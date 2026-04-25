@@ -10,6 +10,9 @@ const InboxPage = ({ onMessageRead }) => {
   const [selectedMessage, setSelectedMessage] = useState(null)
   const [loading, setLoading] = useState(true)
 
+  const getMessageId = (message) => message?.id || message?._id
+  const isMessageRead = (message) => Boolean(message?.read || message?.isRead)
+
   const fetchMessages = async () => {
     try {
       const { data } = await api.get('/api/messages/my')
@@ -25,33 +28,23 @@ const InboxPage = ({ onMessageRead }) => {
     fetchMessages()
   }, [])
 
-  const handleSelectMessage = async (message) => {
+  const handleSelectMessage = (message) => {
     setSelectedMessage(message)
-    const msgId = message.id || message._id
-    if (!message.read && !message.isRead && msgId) {
-      try {
-        const { data } = await api.patch(`/api/messages/${msgId}/read`)
-        const updatedMessage = { ...message, ...data, read: true, isRead: true }
-        // Update local state
-        setMessages(messages.map(m => (m.id === msgId || m._id === msgId) ? updatedMessage : m))
-        setSelectedMessage(updatedMessage)
-        if (onMessageRead) onMessageRead()
-      } catch (error) {
-        console.error('Failed to mark message as read:', error)
-      }
-    }
   }
 
   const handleMarkAsRead = async (e, message) => {
     e.stopPropagation()
-    const msgId = message.id || message._id
-    if ((message.read || message.isRead) || !msgId) return
+    const msgId = getMessageId(message)
+    if (isMessageRead(message) || !msgId) return
     try {
       const { data } = await api.patch(`/api/messages/${msgId}/read`)
       const updatedMessage = { ...message, ...data, read: true, isRead: true }
-      // Update local state
-      setMessages(messages.map(m => (m.id === msgId || m._id === msgId) ? updatedMessage : m))
-      if (selectedMessage?.id === msgId || selectedMessage?._id === msgId) {
+      setMessages((currentMessages) =>
+        currentMessages.map((currentMessage) =>
+          getMessageId(currentMessage) === msgId ? updatedMessage : currentMessage
+        )
+      )
+      if (getMessageId(selectedMessage) === msgId) {
         setSelectedMessage(updatedMessage)
       }
       if (onMessageRead) onMessageRead()
@@ -75,8 +68,10 @@ const InboxPage = ({ onMessageRead }) => {
     if (!msgId) return
     try {
       await api.delete(`/api/messages/${msgId}`)
-      setMessages(messages.filter(m => (m.id !== msgId && m._id !== msgId)))
-      if (selectedMessage?.id === msgId || selectedMessage?._id === msgId) setSelectedMessage(null)
+      setMessages((currentMessages) =>
+        currentMessages.filter((message) => getMessageId(message) !== msgId)
+      )
+      if (getMessageId(selectedMessage) === msgId) setSelectedMessage(null)
     } catch (error) {
       console.error('Failed to delete message:', error)
     }
@@ -99,12 +94,12 @@ const InboxPage = ({ onMessageRead }) => {
           ) : (
             messages.map((message) => (
               <div 
-                key={message.id} 
-                className={`message-item ${selectedMessage?.id === message.id ? 'selected' : ''} ${(!message.read && !message.isRead) ? 'unread' : ''}`}
+                key={getMessageId(message)}
+                className={`message-item ${getMessageId(selectedMessage) === getMessageId(message) ? 'selected' : ''} ${!isMessageRead(message) ? 'unread' : ''}`}
                 onClick={() => handleSelectMessage(message)}
               >
                 <div className="message-status-icon">
-                  {(message.read || message.isRead) ? <MailOpen size={18} /> : <Mail size={18} className="unread-icon" />}
+                  {isMessageRead(message) ? <MailOpen size={18} /> : <Mail size={18} className="unread-icon" />}
                 </div>
                 <div className="message-preview">
                   <div className="message-title">{message.title}</div>
@@ -122,12 +117,12 @@ const InboxPage = ({ onMessageRead }) => {
               <div className="message-detail-top">
                 <h3>{selectedMessage.title}</h3>
                 <div className="message-detail-actions">
-                  {!(selectedMessage.read || selectedMessage.isRead) && (
+                  {!isMessageRead(selectedMessage) && (
                     <button className="action-btn mark-read" onClick={(e) => handleMarkAsRead(e, selectedMessage)}>
                       <CheckCircle size={18} /> Mark as Read
                     </button>
                   )}
-                  <button className="action-btn delete" onClick={(e) => handleDeleteMessage(e, selectedMessage.id)}>
+                  <button className="action-btn delete" onClick={(e) => handleDeleteMessage(e, getMessageId(selectedMessage))}>
                     <Trash2 size={18} /> Delete
                   </button>
                 </div>
