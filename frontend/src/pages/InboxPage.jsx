@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react'
 import { api } from '../lib/api'
 import ReactMarkdown from 'react-markdown'
 import { Mail, MailOpen, Trash2, Clock, User, CheckCircle } from 'lucide-react'
+import Swal from 'sweetalert2'
 import './InboxPage.css'
 
 const InboxPage = ({ onMessageRead }) => {
@@ -26,12 +27,13 @@ const InboxPage = ({ onMessageRead }) => {
 
   const handleSelectMessage = async (message) => {
     setSelectedMessage(message)
-    if (!message.read && !message.isRead) {
+    const msgId = message.id || message._id
+    if (!message.read && !message.isRead && msgId) {
       try {
-        const { data } = await api.patch(`/api/messages/${message.id}/read`)
+        const { data } = await api.patch(`/api/messages/${msgId}/read`)
         const updatedMessage = { ...message, ...data, read: true, isRead: true }
         // Update local state
-        setMessages(messages.map(m => m.id === message.id ? updatedMessage : m))
+        setMessages(messages.map(m => (m.id === msgId || m._id === msgId) ? updatedMessage : m))
         setSelectedMessage(updatedMessage)
         if (onMessageRead) onMessageRead()
       } catch (error) {
@@ -42,27 +44,39 @@ const InboxPage = ({ onMessageRead }) => {
 
   const handleMarkAsRead = async (e, message) => {
     e.stopPropagation()
-    if (message.read || message.isRead) return
+    const msgId = message.id || message._id
+    if ((message.read || message.isRead) || !msgId) return
     try {
-      const { data } = await api.patch(`/api/messages/${message.id}/read`)
+      const { data } = await api.patch(`/api/messages/${msgId}/read`)
       const updatedMessage = { ...message, ...data, read: true, isRead: true }
       // Update local state
-      setMessages(messages.map(m => m.id === message.id ? updatedMessage : m))
-      if (selectedMessage?.id === message.id) {
+      setMessages(messages.map(m => (m.id === msgId || m._id === msgId) ? updatedMessage : m))
+      if (selectedMessage?.id === msgId || selectedMessage?._id === msgId) {
         setSelectedMessage(updatedMessage)
       }
       if (onMessageRead) onMessageRead()
     } catch (error) {
       console.error('Failed to mark message as read:', error)
+      Swal.fire({
+        icon: 'error',
+        title: 'Error',
+        text: 'Failed to mark message as read. Please try again.',
+        toast: true,
+        position: 'top-end',
+        showConfirmButton: false,
+        timer: 3000
+      })
     }
   }
 
   const handleDeleteMessage = async (e, id) => {
     e.stopPropagation()
+    const msgId = id
+    if (!msgId) return
     try {
-      await api.delete(`/api/messages/${id}`)
-      setMessages(messages.filter(m => m.id !== id))
-      if (selectedMessage?.id === id) setSelectedMessage(null)
+      await api.delete(`/api/messages/${msgId}`)
+      setMessages(messages.filter(m => (m.id !== msgId && m._id !== msgId)))
+      if (selectedMessage?.id === msgId || selectedMessage?._id === msgId) setSelectedMessage(null)
     } catch (error) {
       console.error('Failed to delete message:', error)
     }
@@ -108,7 +122,7 @@ const InboxPage = ({ onMessageRead }) => {
               <div className="message-detail-top">
                 <h3>{selectedMessage.title}</h3>
                 <div className="message-detail-actions">
-                  {!selectedMessage.read && !selectedMessage.isRead && (
+                  {!(selectedMessage.read || selectedMessage.isRead) && (
                     <button className="action-btn mark-read" onClick={(e) => handleMarkAsRead(e, selectedMessage)}>
                       <CheckCircle size={18} /> Mark as Read
                     </button>
