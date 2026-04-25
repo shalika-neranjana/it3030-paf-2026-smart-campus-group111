@@ -754,7 +754,6 @@ const MaintenanceTicketing = ({ mode = 'my' }) => {
                     <option value="URGENT">Urgent</option>
                   </select>
                 </div>
->>>>>>> Stashed changes
               </div>
 
               <div className="form-group full-width">
