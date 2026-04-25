@@ -15,6 +15,7 @@ const ADMIN_NAV_ITEMS = [
 
 const DEFAULT_NAV_ITEMS = [
   { key: 'overview', label: 'Overview', icon: LayoutDashboard },
+  { key: 'view-resources', label: 'View Resources', icon: ClipboardList },
 ]
 
 const formatRole = (role) => {
@@ -81,7 +82,9 @@ const DashboardPage = () => {
   const renderActiveSection = () => {
     switch (activeSection) {
       case 'manage-resources':
-        return <ManageResources />
+        return <ManageResources isReadOnly={false} />
+      case 'view-resources':
+        return <ManageResources isReadOnly={true} />
       case 'overview':
       default:
         return (

@@ -13,7 +13,7 @@ import { api } from '../lib/api'
 const FACILITY_TYPES = ['LECTURE_HALL', 'LAB', 'MEETING_ROOM', 'EQUIPMENT', 'SPECIAL']
 const FACILITY_STATUSES = ['ACTIVE', 'OUT_OF_SERVICE']
 
-const ManageResources = () => {
+const ManageResources = ({ isReadOnly = false }) => {
   const [facilities, setFacilities] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
@@ -67,6 +67,7 @@ const ManageResources = () => {
   )
 
   const handleOpenModal = (facility = null) => {
+    if (isReadOnly) return
     if (facility) {
       setEditingFacility(facility)
       setFormData({
@@ -109,6 +110,7 @@ const ManageResources = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault()
+    if (isReadOnly) return
     try {
       if (editingFacility) {
         await api.put(`/api/facilities/${editingFacility.id}`, formData)
@@ -124,6 +126,7 @@ const ManageResources = () => {
   }
 
   const handleDelete = async (id) => {
+    if (isReadOnly) return
     if (!window.confirm('Permanently delete this resource?')) return
     try {
       await api.delete(`/api/facilities/${id}`)
@@ -138,12 +141,16 @@ const ManageResources = () => {
     <div className="resource-manager">
       <div className="section-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
         <div>
-          <h2 style={{ margin: 0 }}>Resource Management</h2>
-          <p style={{ margin: '0.25rem 0 0', color: '#526f81', fontSize: '0.9rem' }}>Add, edit, or remove campus facilities and assets.</p>
+          <h2 style={{ margin: 0 }}>{isReadOnly ? 'Campus Resources' : 'Resource Management'}</h2>
+          <p style={{ margin: '0.25rem 0 0', color: '#526f81', fontSize: '0.9rem' }}>
+            {isReadOnly ? 'Explore available facilities and assets for reservation.' : 'Add, edit, or remove campus facilities and assets.'}
+          </p>
         </div>
-        <button className="primary-btn" onClick={() => handleOpenModal()}>
-          <Plus size={18} style={{ marginRight: '0.5rem' }} /> Add Resource
-        </button>
+        {!isReadOnly && (
+          <button className="primary-btn" onClick={() => handleOpenModal()}>
+            <Plus size={18} style={{ marginRight: '0.5rem' }} /> Add Resource
+          </button>
+        )}
       </div>
 
       <div className="manage-controls" style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap', marginBottom: '1.5rem', alignItems: 'center' }}>
@@ -244,12 +251,17 @@ const ManageResources = () => {
                   </td>
                   <td>
                     <div className="table-actions">
-                      <button className="icon-btn" onClick={() => handleOpenModal(facility)}>
-                        <Edit2 size={16} />
-                      </button>
-                      <button className="icon-btn delete" onClick={() => handleDelete(facility.id)}>
-                        <Trash2 size={16} />
-                      </button>
+                      <button className="ghost-btn" style={{ padding: '0.4rem 0.8rem', fontSize: '0.8rem' }}>Reserve</button>
+                      {!isReadOnly && (
+                        <>
+                          <button className="icon-btn" onClick={() => handleOpenModal(facility)}>
+                            <Edit2 size={16} />
+                          </button>
+                          <button className="icon-btn delete" onClick={() => handleDelete(facility.id)}>
+                            <Trash2 size={16} />
+                          </button>
+                        </>
+                      )}
                     </div>
                   </td>
                 </tr>
