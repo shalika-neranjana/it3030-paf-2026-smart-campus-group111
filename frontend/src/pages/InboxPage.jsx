@@ -26,11 +26,13 @@ const InboxPage = ({ onMessageRead }) => {
 
   const handleSelectMessage = async (message) => {
     setSelectedMessage(message)
-    if (!message.read) {
+    if (!message.read && !message.isRead) {
       try {
-        await api.patch(`/api/messages/${message.id}/read`)
+        const { data } = await api.patch(`/api/messages/${message.id}/read`)
+        const updatedMessage = { ...message, ...data, read: true, isRead: true }
         // Update local state
-        setMessages(messages.map(m => m.id === message.id ? { ...m, read: true, readAt: new Date().toISOString() } : m))
+        setMessages(messages.map(m => m.id === message.id ? updatedMessage : m))
+        setSelectedMessage(updatedMessage)
         if (onMessageRead) onMessageRead()
       } catch (error) {
         console.error('Failed to mark message as read:', error)
@@ -40,11 +42,15 @@ const InboxPage = ({ onMessageRead }) => {
 
   const handleMarkAsRead = async (e, message) => {
     e.stopPropagation()
-    if (message.read) return
+    if (message.read || message.isRead) return
     try {
-      await api.patch(`/api/messages/${message.id}/read`)
+      const { data } = await api.patch(`/api/messages/${message.id}/read`)
+      const updatedMessage = { ...message, ...data, read: true, isRead: true }
       // Update local state
-      setMessages(messages.map(m => m.id === message.id ? { ...m, read: true, readAt: new Date().toISOString() } : m))
+      setMessages(messages.map(m => m.id === message.id ? updatedMessage : m))
+      if (selectedMessage?.id === message.id) {
+        setSelectedMessage(updatedMessage)
+      }
       if (onMessageRead) onMessageRead()
     } catch (error) {
       console.error('Failed to mark message as read:', error)
@@ -80,11 +86,11 @@ const InboxPage = ({ onMessageRead }) => {
             messages.map((message) => (
               <div 
                 key={message.id} 
-                className={`message-item ${selectedMessage?.id === message.id ? 'selected' : ''} ${!message.read ? 'unread' : ''}`}
+                className={`message-item ${selectedMessage?.id === message.id ? 'selected' : ''} ${(!message.read && !message.isRead) ? 'unread' : ''}`}
                 onClick={() => handleSelectMessage(message)}
               >
                 <div className="message-status-icon">
-                  {message.read ? <MailOpen size={18} /> : <Mail size={18} className="unread-icon" />}
+                  {(message.read || message.isRead) ? <MailOpen size={18} /> : <Mail size={18} className="unread-icon" />}
                 </div>
                 <div className="message-preview">
                   <div className="message-title">{message.title}</div>
@@ -102,7 +108,7 @@ const InboxPage = ({ onMessageRead }) => {
               <div className="message-detail-top">
                 <h3>{selectedMessage.title}</h3>
                 <div className="message-detail-actions">
-                  {!selectedMessage.read && (
+                  {!selectedMessage.read && !selectedMessage.isRead && (
                     <button className="action-btn mark-read" onClick={(e) => handleMarkAsRead(e, selectedMessage)}>
                       <CheckCircle size={18} /> Mark as Read
                     </button>
