@@ -19,9 +19,17 @@ const ADMIN_NAV_ITEMS = [
 
 const DEFAULT_NAV_ITEMS = [
   { key: 'overview', label: 'Overview', icon: LayoutDashboard },
+  { key: 'inbox-messages', label: 'Inbox', icon: Inbox },
   { key: 'view-resources', label: 'View Resources', icon: ClipboardList },
   { key: 'my-bookings', label: 'My Reservations', icon: CalendarClock },
   { key: 'my-tickets', label: 'Support Tickets', icon: LifeBuoy },
+]
+
+const STAFF_NAV_ITEMS = [
+  { key: 'overview', label: 'Overview', icon: LayoutDashboard },
+  { key: 'inbox-messages', label: 'Inbox', icon: Inbox },
+  { key: 'view-resources', label: 'View Resources', icon: ClipboardList },
+  { key: 'support-tickets', label: 'Assigned Tickets', icon: LifeBuoy },
 ]
 
 const formatRole = (role) => {
@@ -38,6 +46,12 @@ const isAdminRole = (role) => {
   if (!role) return false
   const r = role.toUpperCase()
   return r === 'ADMINISTRATOR' || r === 'MANAGER'
+}
+
+const isStaffRole = (role) => {
+  if (!role) return false
+  const r = role.toUpperCase()
+  return r === 'STAFF' || r === 'TECHNICIAN'
 }
 
 const DashboardPage = () => {
@@ -87,7 +101,11 @@ const DashboardPage = () => {
   const displayName = [user?.firstName, user?.lastName].filter(Boolean).join(' ') || 'Logged in user'
   const displayRole = formatRole(user?.role)
   const profileImage = resolveApiUrl(user?.imageUrl) || '/logo.png'
-  const navItems = isAdminRole(user?.role) ? ADMIN_NAV_ITEMS : DEFAULT_NAV_ITEMS
+  const navItems = isAdminRole(user?.role)
+    ? ADMIN_NAV_ITEMS
+    : isStaffRole(user?.role)
+      ? STAFF_NAV_ITEMS
+      : DEFAULT_NAV_ITEMS
   const [activeSection, setActiveSection] = useState(() => navItems[0]?.key || 'overview')
 
   useEffect(() => {

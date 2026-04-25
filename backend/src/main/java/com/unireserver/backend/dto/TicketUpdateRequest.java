@@ -9,4 +9,8 @@ public class TicketUpdateRequest {
     private String assignedTechnicianId;
     private String resolutionNotes;
     private String rejectionReason;
+    private String category;
+    private String description;
+    private com.unireserver.backend.model.TicketPriority priority;
+    private String resourceId;
 }
