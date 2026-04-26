@@ -2,6 +2,7 @@ package com.unireserver.backend.controller;
 
 import com.unireserver.backend.dto.CommentRequest;
 import com.unireserver.backend.dto.TicketCreateRequest;
+import com.unireserver.backend.dto.TicketResponse;
 import com.unireserver.backend.dto.TicketUpdateRequest;
 import com.unireserver.backend.model.AppUser;
 import com.unireserver.backend.model.MaintenanceTicket;
@@ -18,6 +19,7 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/tickets")
@@ -38,45 +40,45 @@ public class MaintenanceTicketController {
 
     @PostMapping
     @PreAuthorize("hasAuthority('ROLE_STUDENT') or hasAuthority('ROLE_INSTRUCTOR') or hasAuthority('ROLE_LECTURER')")
-    public MaintenanceTicket createTicket(@RequestBody TicketCreateRequest request, Authentication authentication) {
+    public TicketResponse createTicket(@RequestBody TicketCreateRequest request, Authentication authentication) {
         AppUser user = getCurrentUser(authentication);
-        return ticketService.createTicket(request, user.getId());
+        return mapTicketToResponse(ticketService.createTicket(request, user.getId()));
     }
 
     @GetMapping
     @PreAuthorize("hasAuthority('ROLE_ADMINISTRATOR') or hasAuthority('ROLE_MANAGER') or hasAuthority('ROLE_STAFF') or hasAuthority('ROLE_TECHNICIAN')")
-    public List<MaintenanceTicket> getAllTickets(Authentication authentication) {
+    public List<TicketResponse> getAllTickets(Authentication authentication) {
         AppUser user = getCurrentUser(authentication);
         com.unireserver.backend.model.UserRole role = user.getRole();
         if (role == com.unireserver.backend.model.UserRole.ADMINISTRATOR || role == com.unireserver.backend.model.UserRole.MANAGER) {
-            return ticketService.getAllTickets();
+            return mapTicketsToResponse(ticketService.getAllTickets());
         }
         // Staff or Technician: return tickets assigned to them
-        return ticketService.getTicketsByAssignedTechnician(user.getId());
+        return mapTicketsToResponse(ticketService.getTicketsByAssignedTechnician(user.getId()));
     }
 
     @GetMapping("/my")
-    public List<MaintenanceTicket> getMyTickets(Authentication authentication) {
+    public List<TicketResponse> getMyTickets(Authentication authentication) {
         AppUser user = getCurrentUser(authentication);
-        return ticketService.getTicketsByRequester(user.getId());
+        return mapTicketsToResponse(ticketService.getTicketsByRequester(user.getId()));
     }
 
     @GetMapping("/assigned")
     @PreAuthorize("hasAuthority('ROLE_TECHNICIAN') or hasAuthority('ROLE_STAFF')")
-    public List<MaintenanceTicket> getAssignedTickets(Authentication authentication) {
+    public List<TicketResponse> getAssignedTickets(Authentication authentication) {
         AppUser user = getCurrentUser(authentication);
-        return ticketService.getTicketsByAssignedTechnician(user.getId());
+        return mapTicketsToResponse(ticketService.getTicketsByAssignedTechnician(user.getId()));
     }
 
     @GetMapping("/{id}")
-    public MaintenanceTicket getTicketById(@PathVariable String id) {
-        return ticketService.getTicketById(id);
+    public TicketResponse getTicketById(@PathVariable String id) {
+        return mapTicketToResponse(ticketService.getTicketById(id));
     }
 
     @PutMapping("/{id}")
-    public MaintenanceTicket updateTicket(@PathVariable String id, @RequestBody TicketUpdateRequest request, Authentication authentication) {
+    public TicketResponse updateTicket(@PathVariable String id, @RequestBody TicketUpdateRequest request, Authentication authentication) {
         AppUser user = getCurrentUser(authentication);
-        return ticketService.updateTicket(id, request, user);
+        return mapTicketToResponse(ticketService.updateTicket(id, request, user));
     }
 
     @DeleteMapping("/{id}")
@@ -157,5 +159,43 @@ public class MaintenanceTicketController {
     private AppUser getCurrentUser(Authentication authentication) {
         return userRepository.findByEmail(authentication.getName().toLowerCase())
                 .orElseThrow(() -> new UsernameNotFoundException("User not found"));
+    }
+
+    private List<TicketResponse> mapTicketsToResponse(List<MaintenanceTicket> tickets) {
+        return tickets.stream().map(this::mapTicketToResponse).collect(Collectors.toList());
+    }
+
+    private TicketResponse mapTicketToResponse(MaintenanceTicket ticket) {
+        String assignedName = null;
+        com.unireserver.backend.model.UserRole assignedRole = null;
+        if (ticket.getAssignedTechnicianId() != null && !ticket.getAssignedTechnicianId().isBlank()) {
+            AppUser assigned = userRepository.findById(ticket.getAssignedTechnicianId()).orElse(null);
+            if (assigned != null) {
+                String firstName = assigned.getFirstName() != null ? assigned.getFirstName() : "";
+                String lastName = assigned.getLastName() != null ? assigned.getLastName() : "";
+                String fullName = (firstName + " " + lastName).trim();
+                assignedName = !fullName.isBlank() ? fullName : assigned.getEmail();
+                assignedRole = assigned.getRole();
+            }
+        }
+
+        return TicketResponse.builder()
+                .id(ticket.getId())
+                .resourceId(ticket.getResourceId())
+                .category(ticket.getCategory())
+                .description(ticket.getDescription())
+                .priority(ticket.getPriority())
+                .status(ticket.getStatus())
+                .requesterId(ticket.getRequesterId())
+                .assignedTechnicianId(ticket.getAssignedTechnicianId())
+                .assignedTechnicianName(assignedName)
+                .assignedTechnicianRole(assignedRole)
+                .preferredContactDetails(ticket.getPreferredContactDetails())
+                .resolutionNotes(ticket.getResolutionNotes())
+                .rejectionReason(ticket.getRejectionReason())
+                .attachmentUrls(ticket.getAttachmentUrls())
+                .createdAt(ticket.getCreatedAt())
+                .updatedAt(ticket.getUpdatedAt())
+                .build();
     }
 }

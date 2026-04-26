@@ -383,7 +383,7 @@ const MaintenanceTicketing = ({ mode = 'my' }) => {
                         <span>{ticket.status.replace('_', ' ')}</span>
                       </div>
                       <div className="ticket-card-actions">
-                        {canShowCreatorActions(ticket) && (
+                        {mode !== 'my' && canShowCreatorActions(ticket) && (
                           <button 
                             className="card-action-btn edit" 
                             type="button"
@@ -407,7 +407,7 @@ const MaintenanceTicketing = ({ mode = 'my' }) => {
                             <Edit2 size={12} />
                           </button>
                         )}
-                        {canShowCreatorActions(ticket) && (
+                        {mode !== 'my' && canShowCreatorActions(ticket) && (
                           <button 
                             className="card-action-btn delete" 
                             type="button"
@@ -565,9 +565,11 @@ const MaintenanceTicketing = ({ mode = 'my' }) => {
                     <div className="info-group assigned">
                       <label>Assigned To</label>
                       <p>
-                        {staffMembers.find(s => s.id === selectedTicket.assignedTechnicianId) 
-                          ? `${staffMembers.find(s => s.id === selectedTicket.assignedTechnicianId).firstName} ${staffMembers.find(s => s.id === selectedTicket.assignedTechnicianId).lastName}`
-                          : 'Staff Member'}
+                        {selectedTicket.assignedTechnicianName
+                          ? `${selectedTicket.assignedTechnicianName}${selectedTicket.assignedTechnicianRole ? ` (${selectedTicket.assignedTechnicianRole})` : ''}`
+                          : staffMembers.find(s => s.id === selectedTicket.assignedTechnicianId)
+                            ? `${staffMembers.find(s => s.id === selectedTicket.assignedTechnicianId).firstName} ${staffMembers.find(s => s.id === selectedTicket.assignedTechnicianId).lastName} (${staffMembers.find(s => s.id === selectedTicket.assignedTechnicianId).role})`
+                            : 'Assigned staff member'}
                       </p>
                     </div>
                   )}
