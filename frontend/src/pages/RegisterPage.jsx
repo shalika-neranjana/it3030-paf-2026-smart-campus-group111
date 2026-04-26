@@ -1,10 +1,12 @@
 import { useEffect, useMemo, useState } from 'react'
 import Cropper from 'react-easy-crop'
 import 'react-easy-crop/react-easy-crop.css'
+import { Eye, EyeOff } from 'lucide-react'
 import { Link, useNavigate } from 'react-router-dom'
 import { showError, showSuccess, showWarning } from '../lib/alerts'
 import { api } from '../lib/api'
 import { cropImageByPixels } from '../lib/image'
+import { getPasswordValidationError, PASSWORD_RULE_TEXT } from '../lib/password'
 import { formatSriLankanPhoneInput, isValidSriLankanMobile } from '../lib/phone'
 import Button from '../components/ui/Button'
 import FormField from '../components/ui/FormField'
@@ -25,6 +27,8 @@ const nameRegex = /^[A-Za-z]+(?:[\s'-][A-Za-z]+)*$/
 const RegisterPage = () => {
   const navigate = useNavigate()
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [showPassword, setShowPassword] = useState(false)
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false)
   const [croppedImage, setCroppedImage] = useState(null)
   const [imagePreview, setImagePreview] = useState('')
   const [selectedImageUrl, setSelectedImageUrl] = useState('')
@@ -63,6 +67,7 @@ const RegisterPage = () => {
     () => !formData.confirmPassword || formData.password === formData.confirmPassword,
     [formData.confirmPassword, formData.password],
   )
+  const passwordError = useMemo(() => getPasswordValidationError(formData.password), [formData.password])
 
   const onInputChange = (event) => {
     const { name, value } = event.target
@@ -122,6 +127,11 @@ const RegisterPage = () => {
 
     if (!passwordMatch) {
       await showWarning('Password mismatch', 'Password and confirm password must match.')
+      return false
+    }
+
+    if (passwordError) {
+      await showWarning('Weak password', passwordError)
       return false
     }
 
@@ -212,8 +222,26 @@ const RegisterPage = () => {
                 />
               </FormField>
 
-              <FormField label="Password" htmlFor="password" required>
-                <input className="ui-input" id="password" name="password" type="password" value={formData.password} onChange={onInputChange} required />
+              <FormField label="Password" htmlFor="password" required error={passwordError} hint={passwordError ? '' : PASSWORD_RULE_TEXT}>
+                <div className="password-input-wrap">
+                  <input
+                    className="ui-input"
+                    id="password"
+                    name="password"
+                    type={showPassword ? 'text' : 'password'}
+                    value={formData.password}
+                    onChange={onInputChange}
+                    required
+                  />
+                  <button
+                    type="button"
+                    className="password-visibility-btn"
+                    onClick={() => setShowPassword((prev) => !prev)}
+                    aria-label={showPassword ? 'Hide password' : 'Show password'}
+                  >
+                    {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                  </button>
+                </div>
               </FormField>
 
               <FormField
@@ -222,15 +250,25 @@ const RegisterPage = () => {
                 required
                 error={!passwordMatch ? 'Passwords do not match.' : ''}
               >
-                <input
-                  className="ui-input"
-                  id="confirmPassword"
-                  name="confirmPassword"
-                  type="password"
-                  value={formData.confirmPassword}
-                  onChange={onInputChange}
-                  required
-                />
+                <div className="password-input-wrap">
+                  <input
+                    className="ui-input"
+                    id="confirmPassword"
+                    name="confirmPassword"
+                    type={showConfirmPassword ? 'text' : 'password'}
+                    value={formData.confirmPassword}
+                    onChange={onInputChange}
+                    required
+                  />
+                  <button
+                    type="button"
+                    className="password-visibility-btn"
+                    onClick={() => setShowConfirmPassword((prev) => !prev)}
+                    aria-label={showConfirmPassword ? 'Hide password' : 'Show password'}
+                  >
+                    {showConfirmPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                  </button>
+                </div>
               </FormField>
 
               <FormField label="Profile Image (1:1 crop)" htmlFor="image" required>

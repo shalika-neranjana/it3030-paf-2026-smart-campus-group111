@@ -1,8 +1,10 @@
 import { useState } from 'react'
+import { Eye, EyeOff } from 'lucide-react'
 import { Link, useNavigate } from 'react-router-dom'
 import { GoogleLogin } from '@react-oauth/google'
 import { api } from '../lib/api'
 import { showError, showSuccess } from '../lib/alerts'
+import { getPasswordValidationError, PASSWORD_RULE_TEXT } from '../lib/password'
 import Button from '../components/ui/Button'
 import FormField from '../components/ui/FormField'
 
@@ -13,6 +15,7 @@ const LoginPage = () => {
     password: '',
   })
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [showPassword, setShowPassword] = useState(false)
 
   const onChange = (event) => {
     const { name, value } = event.target
@@ -21,6 +24,13 @@ const LoginPage = () => {
 
   const onSubmit = async (event) => {
     event.preventDefault()
+
+    const passwordError = getPasswordValidationError(formData.password)
+    if (passwordError) {
+      await showError('Weak password', passwordError)
+      return
+    }
+
     setIsSubmitting(true)
 
     try {
@@ -81,16 +91,32 @@ const LoginPage = () => {
             />
           </FormField>
 
-          <FormField label="Password" htmlFor="password" required>
-            <input
-              className="ui-input"
-              id="password"
-              name="password"
-              type="password"
-              value={formData.password}
-              onChange={onChange}
-              required
-            />
+          <FormField
+            label="Password"
+            htmlFor="password"
+            required
+            error={formData.password ? getPasswordValidationError(formData.password) : ''}
+            hint={formData.password ? '' : PASSWORD_RULE_TEXT}
+          >
+            <div className="password-input-wrap">
+              <input
+                className="ui-input"
+                id="password"
+                name="password"
+                type={showPassword ? 'text' : 'password'}
+                value={formData.password}
+                onChange={onChange}
+                required
+              />
+              <button
+                type="button"
+                className="password-visibility-btn"
+                onClick={() => setShowPassword((prev) => !prev)}
+                aria-label={showPassword ? 'Hide password' : 'Show password'}
+              >
+                {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+              </button>
+            </div>
           </FormField>
 
           <Button fullWidth type="submit" disabled={isSubmitting}>
