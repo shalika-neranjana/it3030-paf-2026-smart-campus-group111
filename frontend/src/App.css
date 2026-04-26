@@ -1388,6 +1388,177 @@
   gap: 0.75rem;
 }
 
+.timetable-page {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.timetable-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+  flex-wrap: wrap;
+}
+
+.timetable-resource-search {
+  position: relative;
+  min-width: 300px;
+}
+
+.timetable-label {
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: #14415b;
+}
+
+.timetable-select {
+  min-width: 260px;
+}
+
+.timetable-search-input {
+  margin-top: 0.35rem;
+}
+
+.timetable-search-input .ui-input {
+  width: 100%;
+  padding-left: 2.1rem;
+}
+
+.timetable-search-input .search-icon {
+  left: 0.7rem;
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+.timetable-suggestions-list {
+  position: absolute;
+  top: calc(100% + 0.35rem);
+  left: 0;
+  right: 0;
+  max-height: 220px;
+  overflow-y: auto;
+  background: #ffffff;
+  border: 1px solid #dce8eb;
+  border-radius: 12px;
+  box-shadow: 0 12px 25px rgba(15, 33, 54, 0.12);
+  z-index: 20;
+}
+
+.timetable-suggestion-item {
+  width: 100%;
+  border: none;
+  background: transparent;
+  text-align: left;
+  padding: 0.65rem 0.75rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.7rem;
+  cursor: pointer;
+}
+
+.timetable-suggestion-item:hover {
+  background: #f4f9fc;
+}
+
+.timetable-no-suggestions {
+  padding: 0.7rem 0.75rem;
+  color: #6a7f8d;
+  font-size: 0.86rem;
+}
+
+.timetable-month-nav {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+}
+
+.timetable-month-label {
+  min-width: 10rem;
+  text-align: center;
+  font-weight: 700;
+  color: #0b344d;
+}
+
+.timetable-calendar-wrap {
+  background: #fff;
+  border: 1px solid #dce8eb;
+  border-radius: 16px;
+  overflow: hidden;
+}
+
+.timetable-calendar-head {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  background: #f5fbfe;
+  border-bottom: 1px solid #e3eef3;
+}
+
+.timetable-weekday {
+  padding: 0.75rem;
+  text-align: center;
+  font-weight: 700;
+  color: #335b72;
+}
+
+.timetable-calendar-grid {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+}
+
+.timetable-day {
+  min-height: 115px;
+  border-right: 1px solid #edf3f6;
+  border-bottom: 1px solid #edf3f6;
+  padding: 0.45rem;
+  background: #fff;
+}
+
+.timetable-day.muted {
+  background: #fbfdff;
+  color: #8aa0ae;
+}
+
+.timetable-day.today {
+  box-shadow: inset 0 0 0 2px rgba(37, 121, 223, 0.28);
+}
+
+.timetable-day-number {
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: #133a4f;
+  margin-bottom: 0.4rem;
+}
+
+.timetable-slots {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.timetable-slot {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  border-radius: 8px;
+  padding: 0.2rem 0.35rem;
+  font-size: 0.72rem;
+  font-weight: 600;
+  line-height: 1.2;
+}
+
+.timetable-slot.approved {
+  background: #dff4e7;
+  color: #1f6d49;
+}
+
+.timetable-slot.pending {
+  background: #fff2de;
+  color: #9b5c01;
+}
+
 @media (max-width: 768px) {
   .facility-form {
     grid-template-columns: 1fr;
@@ -1409,5 +1580,31 @@
   .booking-actions {
     width: 100%;
     justify-content: stretch;
+  }
+
+  .timetable-month-nav {
+    margin-left: 0;
+  }
+
+  .timetable-resource-search {
+    min-width: 100%;
+  }
+
+  .timetable-month-label {
+    min-width: auto;
+  }
+
+  .timetable-weekday {
+    font-size: 0.75rem;
+    padding: 0.55rem 0.3rem;
+  }
+
+  .timetable-day {
+    min-height: 95px;
+    padding: 0.25rem;
+  }
+
+  .timetable-slot {
+    font-size: 0.64rem;
   }
 }

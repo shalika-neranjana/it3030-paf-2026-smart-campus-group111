@@ -1,11 +1,12 @@
 import { useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { CalendarClock, ClipboardList, Inbox, LayoutDashboard, LifeBuoy, Wrench } from 'lucide-react'
+import { CalendarClock, ClipboardList, Inbox, LifeBuoy, Wrench } from 'lucide-react'
 import { api, resolveApiUrl } from '../lib/api'
 
 import ManageResources from './ManageResources'
 import BookingManagement from './BookingManagement'
 import MaintenanceTicketing from './MaintenanceTicketing'
+import TimetablePage from './TimetablePage'
 
 import InboxPage from './InboxPage'
 
@@ -18,17 +19,17 @@ const ADMIN_NAV_ITEMS = [
 ]
 
 const DEFAULT_NAV_ITEMS = [
-  { key: 'overview', label: 'Overview', icon: LayoutDashboard },
   { key: 'inbox-messages', label: 'Inbox', icon: Inbox },
   { key: 'view-resources', label: 'View Resources', icon: ClipboardList },
+  { key: 'timetable', label: 'Timetable', icon: CalendarClock },
   { key: 'my-bookings', label: 'My Reservations', icon: CalendarClock },
   { key: 'my-tickets', label: 'Support Tickets', icon: LifeBuoy },
 ]
 
 const STAFF_NAV_ITEMS = [
-  { key: 'overview', label: 'Overview', icon: LayoutDashboard },
   { key: 'inbox-messages', label: 'Inbox', icon: Inbox },
   { key: 'view-resources', label: 'View Resources', icon: ClipboardList },
+  { key: 'timetable', label: 'Timetable', icon: CalendarClock },
   { key: 'support-tickets', label: 'Assigned Tickets', icon: LifeBuoy },
 ]
 
@@ -132,6 +133,8 @@ const DashboardPage = () => {
         return <BookingManagement mode="all" />
       case 'my-bookings':
         return <BookingManagement mode="my" />
+      case 'timetable':
+        return <TimetablePage />
       case 'support-tickets':
         return <MaintenanceTicketing mode="all" />
       case 'my-tickets':
