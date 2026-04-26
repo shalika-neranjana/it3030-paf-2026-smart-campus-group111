@@ -54,13 +54,11 @@ const MaintenanceTicketing = ({ mode = 'my' }) => {
   const isCreatorView = mode === 'my' && !isAdmin && !isStaffOrTech
   const canShowCreatorActions = (ticket) => (isCreatorView || isCreator(ticket)) && !isAdmin && !isStaffOrTech
   const canEditTicket = (ticket) => ticket.status === 'PENDING'
-  const canDeleteTicket = (ticket) => ['RESOLVED', 'REJECTED'].includes(ticket.status)
+  const canDeleteTicket = (ticket) => ['RESOLVED', 'REJECTED', 'PENDING'].includes(ticket.status)
   const adminCanManageAssignment = (ticket) => isAdmin && ['OPEN', 'IN_PROGRESS'].includes(ticket.status)
   const assignmentButtonLabel = (ticket) => ticket.assignedTechnicianId ? 'Change Assigned Person' : 'Assign'
   const canResolveAssignedTicket = (ticket) =>
-    isStaffOrTech &&
-    ticket.assignedTechnicianId === user.id &&
-    ['OPEN', 'IN_PROGRESS'].includes(ticket.status)
+    isStaffOrTech && ['OPEN', 'IN_PROGRESS'].includes(ticket.status)
   
   const [staffMembers, setStaffMembers] = useState([])
 
@@ -85,7 +83,11 @@ const MaintenanceTicketing = ({ mode = 'my' }) => {
       setLoading(true)
       const endpoint = mode === 'my' ? '/api/tickets/my' : '/api/tickets'
       const { data } = await api.get(endpoint)
-      setTickets(data)
+      // Ensure tickets are listed newest-first by createdAt timestamp
+      const sorted = Array.isArray(data)
+        ? data.slice().sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
+        : data
+      setTickets(sorted)
     } catch (error) {
       console.error('Failed to fetch tickets:', error)
     } finally {
@@ -410,7 +412,7 @@ const MaintenanceTicketing = ({ mode = 'my' }) => {
                             className="card-action-btn delete" 
                             type="button"
                             disabled={!canDeleteTicket(ticket)}
-                            title={canDeleteTicket(ticket) ? 'Delete ticket' : 'Deletion is only available when the ticket is resolved or rejected'}
+                            title={canDeleteTicket(ticket) ? 'Delete ticket' : 'Deletion is available when the ticket is pending, resolved, or rejected'}
                             onClick={(e) => {
                               if (!canDeleteTicket(ticket)) return
                               e.stopPropagation()
@@ -543,7 +545,7 @@ const MaintenanceTicketing = ({ mode = 'my' }) => {
                       className="action-btn delete-btn"
                       type="button"
                       disabled={!canDeleteTicket(selectedTicket)}
-                      title={canDeleteTicket(selectedTicket) ? 'Delete ticket' : 'Deletion is only available when the ticket is resolved or rejected'}
+                      title={canDeleteTicket(selectedTicket) ? 'Delete ticket' : 'Deletion is available when the ticket is pending, resolved, or rejected'}
                       onClick={() => {
                         if (!canDeleteTicket(selectedTicket)) return
                         handleDeleteTicket(selectedTicket.id)
@@ -554,6 +556,24 @@ const MaintenanceTicketing = ({ mode = 'my' }) => {
                   )}
                 </div>
               </div>
+
+              {/* Prominent Resolve CTA placed under the header for each ticket when actionable */}
+              {(isAdmin || isStaffOrTech) && (selectedTicket.status === 'OPEN' || selectedTicket.status === 'IN_PROGRESS') && (
+                <div className="resolve-cta">
+                  <button className="action-btn resolved mark-resolved-large" onClick={async () => {
+                    const { value: notes } = await Swal.fire({
+                      title: 'Resolution Notes',
+                      input: 'textarea',
+                      inputLabel: 'Enter details about the fix:',
+                      inputPlaceholder: 'The issue was resolved by...',
+                      showCancelButton: true
+                    })
+                    if (notes) handleUpdateStatus(selectedTicket.id, 'RESOLVED', { resolutionNotes: notes })
+                  }}>
+                    Mark Resolved
+                  </button>
+                </div>
+              )}
 
               <div className="details-grid">
                 <div className="details-info">
