@@ -1,12 +1,13 @@
 import { useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { CalendarClock, ClipboardList, Inbox, LifeBuoy, Wrench } from 'lucide-react'
+import { Bot, CalendarClock, ClipboardList, Inbox, LifeBuoy, Wrench } from 'lucide-react'
 import { api, resolveApiUrl } from '../lib/api'
 
 import ManageResources from './ManageResources'
 import BookingManagement from './BookingManagement'
 import MaintenanceTicketing from './MaintenanceTicketing'
 import TimetablePage from './TimetablePage'
+import AiAssistantPage from './AiAssistantPage'
 
 import InboxPage from './InboxPage'
 
@@ -24,6 +25,7 @@ const DEFAULT_NAV_ITEMS = [
   { key: 'timetable', label: 'Timetable', icon: CalendarClock },
   { key: 'my-bookings', label: 'My Reservations', icon: CalendarClock },
   { key: 'my-tickets', label: 'Support Tickets', icon: LifeBuoy },
+  { key: 'ai-assistant', label: 'AI Assistant', icon: Bot },
 ]
 
 const STAFF_NAV_ITEMS = [
@@ -139,6 +141,8 @@ const DashboardPage = () => {
         return <MaintenanceTicketing mode="all" />
       case 'my-tickets':
         return <MaintenanceTicketing mode="my" />
+      case 'ai-assistant':
+        return <AiAssistantPage />
       case 'overview':
       default:
         return (
