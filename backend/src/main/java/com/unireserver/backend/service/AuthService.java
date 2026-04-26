@@ -6,6 +6,7 @@ import com.unireserver.backend.dto.RegisterRequest;
 import com.unireserver.backend.dto.UpdateProfileRequest;
 import com.unireserver.backend.dto.UserProfileResponse;
 import com.unireserver.backend.model.AppUser;
+import com.unireserver.backend.model.Message;
 import com.unireserver.backend.repository.UserRepository;
 import com.unireserver.backend.util.PhoneNumberUtil;
 import lombok.RequiredArgsConstructor;
@@ -27,6 +28,7 @@ import org.springframework.beans.factory.annotation.Value;
 import java.util.Collections;
 
 import java.time.Instant;
+import java.util.regex.Pattern;
 
 @Service
 @RequiredArgsConstructor
@@ -37,11 +39,19 @@ public class AuthService {
     private final AuthenticationManager authenticationManager;
     private final JwtService jwtService;
     private final ImageStorageService imageStorageService;
+    private final MessageService messageService;
+
+    private static final Pattern STRONG_PASSWORD_PATTERN =
+            Pattern.compile("^(?=.*[A-Z])(?=.*[a-z])(?=.*\\d)(?=.*[^A-Za-z0-9]).{8,}$");
+    private static final String PASSWORD_VALIDATION_MESSAGE =
+            "Password must be at least 8 characters and include uppercase, lowercase, number, and special character";
 
     @Value("${google.client.id:YOUR_GOOGLE_CLIENT_ID}")
     private String googleClientId;
 
     public AuthResponse register(RegisterRequest request) {
+        validateStrongPassword(request.getPassword());
+
         if (!request.getPassword().equals(request.getConfirmPassword())) {
             throw new IllegalArgumentException("Password and confirm password do not match");
         }
@@ -71,11 +81,14 @@ public class AuthService {
                 .build();
 
         AppUser savedUser = userRepository.save(user);
+        sendWelcomeMessage(savedUser);
         String token = jwtService.generateToken(savedUser);
         return mapAuthResponse(savedUser, token);
     }
 
     public AuthResponse login(LoginRequest request) {
+        validateStrongPassword(request.getPassword());
+
         String email = request.getEmail().trim().toLowerCase();
         AppUser user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new UsernameNotFoundException("User not found"));
@@ -125,7 +138,9 @@ public class AuthService {
                                 .createdAt(Instant.now())
                                 .updatedAt(Instant.now())
                                 .build();
-                        return userRepository.save(newUser);
+                        AppUser savedNewUser = userRepository.save(newUser);
+                        sendWelcomeMessage(savedNewUser);
+                        return savedNewUser;
                     });
 
             String token = jwtService.generateToken(user);
@@ -171,6 +186,7 @@ public class AuthService {
         user.setPhoneNumber(normalizedPhone);
 
         if (request.getPassword() != null && !request.getPassword().isEmpty()) {
+            validateStrongPassword(request.getPassword());
             if (!request.getPassword().equals(request.getConfirmPassword())) {
                 throw new IllegalArgumentException("Password and confirm password do not match");
             }
@@ -207,5 +223,21 @@ public class AuthService {
                 .role(user.getRole())
                 .imageUrl(imageStorageService.toPublicUrl(user.getImageFilename()))
                 .build();
+    }
+
+    private void validateStrongPassword(String password) {
+        if (password == null || !STRONG_PASSWORD_PATTERN.matcher(password).matches()) {
+            throw new IllegalArgumentException(PASSWORD_VALIDATION_MESSAGE);
+        }
+    }
+
+    private void sendWelcomeMessage(AppUser user) {
+        Message welcomeMessage = Message.builder()
+                .senderId("SYSTEM")
+                .receiverId(user.getId())
+                .title("Welcome to UniReserver")
+                .body("Hi " + user.getFirstName() + ", welcome to UniReserver. Your account is ready to use.")
+                .build();
+        messageService.createMessage(welcomeMessage);
     }
 }
