@@ -1,6 +1,9 @@
 import { useState } from 'react'
-import { X, Calendar, Clock, Users, MessageSquare, Loader2 } from 'lucide-react'
+import { Calendar, Clock, Loader2, MessageSquare, Users } from 'lucide-react'
 import { api } from '../lib/api'
+import Button from '../components/ui/Button'
+import FormField from '../components/ui/FormField'
+import Modal from '../components/ui/Modal'
 
 const BookingModal = ({ isOpen, onClose, facility, onSuccess }) => {
   const [loading, setLoading] = useState(false)
@@ -48,114 +51,143 @@ const BookingModal = ({ isOpen, onClose, facility, onSuccess }) => {
   }
 
   return (
-    <div className="modal-backdrop">
-      <div className="modal-content" style={{ maxWidth: '500px' }}>
-        <div className="modal-header">
-          <div>
-            <h2 style={{ marginBottom: '0.25rem' }}>Reserve Resource</h2>
-            <p style={{ fontSize: '0.9rem', color: '#526f81' }}>{facility.name} • {facility.location}</p>
+    <Modal
+      title="Reserve Resource"
+      subtitle={`${facility.name}${facility.building ? ` • ${facility.building}` : ''}`}
+      size="sm"
+      onClose={onClose}
+      footer={
+        <>
+          <Button variant="secondary" type="button" onClick={onClose} disabled={loading}>
+            Cancel
+          </Button>
+          <Button type="submit" form="booking-request-form" disabled={loading}>
+            {loading ? <><Loader2 className="animate-spin" size={18} /> Submitting...</> : 'Request Booking'}
+          </Button>
+        </>
+      }
+    >
+      <form id="booking-request-form" onSubmit={handleSubmit}>
+        {error ? <div className="booking-form-error">{error}</div> : null}
+
+        <div className="ui-field-grid">
+          <FormField
+            label="Date"
+            htmlFor="booking-date"
+            required
+            labelContent={
+              <>
+                <Calendar size={16} className="ui-label-icon" />
+                <span>Date</span>
+              </>
+            }
+          >
+            <input
+              className="ui-input"
+              id="booking-date"
+              type="date"
+              name="date"
+              value={formData.date}
+              onChange={handleInputChange}
+              min={new Date().toISOString().split('T')[0]}
+              required
+            />
+          </FormField>
+
+          <div className="ui-field-grid ui-field-grid--two">
+            <FormField
+              label="Start Time"
+              htmlFor="booking-start"
+              required
+              labelContent={
+                <>
+                  <Clock size={16} className="ui-label-icon" />
+                  <span>Start Time</span>
+                </>
+              }
+            >
+              <input
+                className="ui-input"
+                id="booking-start"
+                type="time"
+                name="startTime"
+                value={formData.startTime}
+                onChange={handleInputChange}
+                required
+              />
+            </FormField>
+            <FormField
+              label="End Time"
+              htmlFor="booking-end"
+              required
+              labelContent={
+                <>
+                  <Clock size={16} className="ui-label-icon" />
+                  <span>End Time</span>
+                </>
+              }
+            >
+              <input
+                className="ui-input"
+                id="booking-end"
+                type="time"
+                name="endTime"
+                value={formData.endTime}
+                onChange={handleInputChange}
+                required
+              />
+            </FormField>
           </div>
-          <button className="close-btn" onClick={onClose}><X size={20} /></button>
+
+          <FormField
+            label="Expected Attendees"
+            htmlFor="booking-attendees"
+            required
+            hint={`Capacity: ${facility.capacity}`}
+            labelContent={
+              <>
+                <Users size={16} className="ui-label-icon" />
+                <span>Expected Attendees</span>
+              </>
+            }
+          >
+            <input
+              className="ui-input"
+              id="booking-attendees"
+              type="number"
+              name="expectedAttendees"
+              value={formData.expectedAttendees}
+              onChange={handleInputChange}
+              placeholder={`Max capacity: ${facility.capacity}`}
+              max={facility.capacity}
+              required
+            />
+          </FormField>
+
+          <FormField
+            label="Purpose of Booking"
+            htmlFor="booking-purpose"
+            required
+            labelContent={
+              <>
+                <MessageSquare size={16} className="ui-label-icon" />
+                <span>Purpose of Booking</span>
+              </>
+            }
+          >
+            <textarea
+              className="ui-textarea"
+              id="booking-purpose"
+              name="purpose"
+              value={formData.purpose}
+              onChange={handleInputChange}
+              placeholder="e.g. Weekly project meeting, lab session, or seminar"
+              required
+            ></textarea>
+          </FormField>
         </div>
-
-        <form onSubmit={handleSubmit}>
-          <div className="modal-body">
-            {error && (
-              <div style={{ 
-                padding: '0.75rem', 
-                backgroundColor: '#fff1f2', 
-                color: '#e11d48', 
-                borderRadius: '8px', 
-                marginBottom: '1.5rem',
-                fontSize: '0.9rem',
-                border: '1px solid #fda4af'
-              }}>
-                {error}
-              </div>
-            )}
-
-            <div className="facility-form" style={{ gridTemplateColumns: '1fr' }}>
-              <div className="form-group">
-                <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                  <Calendar size={16} /> Date
-                </label>
-                <input 
-                  type="date" 
-                  name="date" 
-                  value={formData.date} 
-                  onChange={handleInputChange} 
-                  min={new Date().toISOString().split('T')[0]}
-                  required 
-                />
-              </div>
-
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
-                <div className="form-group">
-                  <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                    <Clock size={16} /> Start Time
-                  </label>
-                  <input 
-                    type="time" 
-                    name="startTime" 
-                    value={formData.startTime} 
-                    onChange={handleInputChange} 
-                    required 
-                  />
-                </div>
-                <div className="form-group">
-                  <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                    <Clock size={16} /> End Time
-                  </label>
-                  <input 
-                    type="time" 
-                    name="endTime" 
-                    value={formData.endTime} 
-                    onChange={handleInputChange} 
-                    required 
-                  />
-                </div>
-              </div>
-
-              <div className="form-group">
-                <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                  <Users size={16} /> Expected Attendees
-                </label>
-                <input 
-                  type="number" 
-                  name="expectedAttendees" 
-                  value={formData.expectedAttendees} 
-                  onChange={handleInputChange} 
-                  placeholder={`Max capacity: ${facility.capacity}`}
-                  max={facility.capacity}
-                  required 
-                />
-              </div>
-
-              <div className="form-group">
-                <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                  <MessageSquare size={16} /> Purpose of Booking
-                </label>
-                <textarea 
-                  name="purpose" 
-                  value={formData.purpose} 
-                  onChange={handleInputChange} 
-                  placeholder="e.g. Weekly project meeting, Lab session, etc."
-                  style={{ minHeight: '80px' }}
-                  required
-                ></textarea>
-              </div>
-            </div>
-          </div>
-
-          <div className="modal-footer">
-            <button type="button" className="ghost-btn" onClick={onClose} disabled={loading}>Cancel</button>
-            <button type="submit" className="primary-btn" disabled={loading}>
-              {loading ? <><Loader2 className="animate-spin" size={18} /> Submitting...</> : 'Request Booking'}
-            </button>
-          </div>
-        </form>
-      </div>
-    </div>
+      </form>
+    </Modal>
   )
 }
 

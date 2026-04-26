@@ -1,16 +1,19 @@
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { 
   Search, 
   Plus, 
   Edit2, 
   Trash2, 
-  X,
   Loader2,
   AlertCircle
 } from 'lucide-react'
-import Swal from 'sweetalert2'
 import { api } from '../lib/api'
 import BookingModal from './BookingModal'
+import Button from '../components/ui/Button'
+import Modal from '../components/ui/Modal'
+import StatusBadge from '../components/ui/StatusBadge'
+import ResourceFormFields from '../components/resources/ResourceFormFields'
+import { extractErrorMessage, showConfirm, showError, showSuccess } from '../lib/alerts'
 
 const FACILITY_TYPES = ['LECTURE_HALL', 'LAB', 'MEETING_ROOM', 'EQUIPMENT', 'SPECIAL']
 const FACILITY_STATUSES = ['ACTIVE', 'OUT_OF_SERVICE']
@@ -50,7 +53,7 @@ const ManageResources = ({ isReadOnly = false }) => {
   const [isBookingModalOpen, setIsBookingModalOpen] = useState(false)
   const [selectedFacilityForBooking, setSelectedFacilityForBooking] = useState(null)
 
-  const fetchFacilities = async () => {
+  const fetchFacilities = useCallback(async () => {
     setLoading(true)
     try {
       const params = {}
@@ -67,11 +70,11 @@ const ManageResources = ({ isReadOnly = false }) => {
     } finally {
       setLoading(false)
     }
-  }
+  }, [filterBuilding, filterStatus, filterType, minCapacity])
 
   useEffect(() => {
     fetchFacilities()
-  }, [filterType, filterBuilding, minCapacity, filterStatus])
+  }, [fetchFacilities])
 
   const filteredFacilities = facilities.filter(f => 
     f.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -124,31 +127,21 @@ const ManageResources = ({ isReadOnly = false }) => {
     try {
       if (editingFacility) {
         await api.put(`/api/facilities/${editingFacility.id}`, formData)
-        Swal.fire({
-          icon: 'success',
-          title: 'Resource Updated',
-          text: 'Resource details have been successfully updated.',
-          timer: 2000,
-          showConfirmButton: false
+        await showSuccess('Resource Updated', 'Resource details have been updated successfully.', {
+          timer: 1800,
+          showConfirmButton: false,
         })
       } else {
         await api.post('/api/facilities', formData)
-        Swal.fire({
-          icon: 'success',
-          title: 'Resource Added',
-          text: 'New resource has been added to the catalogue.',
-          timer: 2000,
-          showConfirmButton: false
+        await showSuccess('Resource Added', 'The new resource has been added to the catalogue.', {
+          timer: 1800,
+          showConfirmButton: false,
         })
       }
       handleCloseModal()
       fetchFacilities()
     } catch (err) {
-      Swal.fire({
-        icon: 'error',
-        title: 'Save Failed',
-        text: 'Failed to save resource. Please try again.'
-      })
+      await showError('Save Failed', extractErrorMessage(err, 'Failed to save resource. Please try again.'))
       console.error(err)
     }
   }
@@ -156,31 +149,22 @@ const ManageResources = ({ isReadOnly = false }) => {
   const handleDelete = async (id) => {
     if (isReadOnly) return
     
-    const result = await Swal.fire({
-      title: 'Are you sure?',
-      text: "You won't be able to revert this!",
-      icon: 'warning',
-      showCancelButton: true,
-      confirmButtonColor: '#d33',
-      cancelButtonColor: '#3085d6',
-      confirmButtonText: 'Yes, delete it!'
-    })
+    const result = await showConfirm(
+      'Delete Resource?',
+      'This action removes the resource from the catalogue and cannot be undone.',
+      'Delete Resource'
+    )
 
     if (result.isConfirmed) {
       try {
         await api.delete(`/api/facilities/${id}`)
-        Swal.fire(
-          'Deleted!',
-          'Resource has been deleted.',
-          'success'
-        )
+        await showSuccess('Resource Deleted', 'The resource has been deleted.', {
+          timer: 1600,
+          showConfirmButton: false,
+        })
         fetchFacilities()
       } catch (err) {
-        Swal.fire({
-          icon: 'error',
-          title: 'Delete Failed',
-          text: 'Failed to delete resource.'
-        })
+        await showError('Delete Failed', extractErrorMessage(err, 'Failed to delete resource.'))
         console.error(err)
       }
     }
@@ -193,24 +177,25 @@ const ManageResources = ({ isReadOnly = false }) => {
 
   return (
     <div className="resource-manager">
-      <div className="section-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
-        <div>
-          <h2 style={{ margin: 0 }}>{isReadOnly ? 'Campus Resources' : 'Resource Management'}</h2>
-          <p style={{ margin: '0.25rem 0 0', color: '#526f81', fontSize: '0.9rem' }}>
+      <div className="ui-section-heading">
+        <div className="ui-section-copy">
+          <h2>{isReadOnly ? 'Campus Resources' : 'Resource Management'}</h2>
+          <p>
             {isReadOnly ? 'Explore available facilities and assets for reservation.' : 'Add, edit, or remove campus facilities and assets.'}
           </p>
         </div>
         {!isReadOnly && (
-          <button className="primary-btn" onClick={() => handleOpenModal()}>
-            <Plus size={18} style={{ marginRight: '0.5rem' }} /> Add Resource
-          </button>
+          <Button onClick={() => handleOpenModal()}>
+            <Plus size={18} /> Add Resource
+          </Button>
         )}
       </div>
 
-      <div className="manage-controls" style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap', marginBottom: '1.5rem', alignItems: 'center' }}>
-        <div className="search-box" style={{ flex: 1, minWidth: '300px', marginBottom: 0 }}>
+      <div className="manage-controls ui-filter-row">
+        <div className="search-box resource-search-box">
           <Search className="search-icon" size={20} />
           <input 
+            className="ui-input"
             type="text" 
             placeholder="Filter resources by name or note..." 
             value={searchQuery}
@@ -218,7 +203,7 @@ const ManageResources = ({ isReadOnly = false }) => {
           />
         </div>
 
-        <div className="filters-group" style={{ display: 'flex', gap: '0.75rem' }}>
+        <div className="filters-group">
           <select 
             className="filter-select" 
             value={filterType} 
@@ -254,9 +239,8 @@ const ManageResources = ({ isReadOnly = false }) => {
 
           <input 
             type="number" 
-            className="filter-select" 
+            className="filter-select filter-select-compact manage-filter-compact" 
             placeholder="Min Cap." 
-            style={{ width: '100px' }}
             value={minCapacity}
             onChange={(e) => setMinCapacity(e.target.value)}
           />
@@ -264,18 +248,18 @@ const ManageResources = ({ isReadOnly = false }) => {
       </div>
 
       {loading ? (
-        <div style={{ textAlign: 'center', padding: '3rem' }}>
-          <Loader2 className="animate-spin" size={32} style={{ margin: '0 auto', color: '#1167cc' }} />
-          <p style={{ marginTop: '1rem' }}>Loading catalogue...</p>
+        <div className="ui-feedback">
+          <Loader2 className="animate-spin loading-spinner-icon" size={32} />
+          <p className="feedback-copy-spaced">Loading catalogue...</p>
         </div>
       ) : error ? (
-        <div className="error-message">
+        <div className="ui-feedback ui-feedback--error">
           <AlertCircle size={24} />
           <p>{error}</p>
         </div>
       ) : (
-        <div className="facilities-table-container" style={{ margin: 0 }}>
-          <table className="facilities-table">
+        <div className="facilities-table-container ui-table-card resource-table-card">
+          <table className="facilities-table ui-table">
             <thead>
               <tr>
                 <th>Resource</th>
@@ -299,27 +283,21 @@ const ManageResources = ({ isReadOnly = false }) => {
                   <td><span className="facility-tag tag-type">{facility.type?.replace('_', ' ')}</span></td>
                   <td>{facility.capacity}</td>
                   <td>
-                    <span className={`status-badge status-${facility.status?.toLowerCase()}`} style={{ position: 'static' }}>
-                      {facility.status?.replace('_', ' ')}
-                    </span>
+                    <StatusBadge status={facility.status} />
                   </td>
                   <td>
                     <div className="table-actions">
-                      <button 
-                        className="ghost-btn" 
-                        style={{ padding: '0.4rem 0.8rem', fontSize: '0.8rem' }}
-                        onClick={() => handleOpenBookingModal(facility)}
-                      >
+                      <Button variant="secondary" className="table-action-button" onClick={() => handleOpenBookingModal(facility)}>
                         Reserve
-                      </button>
+                      </Button>
                       {!isReadOnly && (
                         <>
-                          <button className="icon-btn" onClick={() => handleOpenModal(facility)}>
+                          <Button variant="secondary" className="icon-btn" iconOnly onClick={() => handleOpenModal(facility)}>
                             <Edit2 size={16} />
-                          </button>
-                          <button className="icon-btn delete" onClick={() => handleDelete(facility.id)}>
+                          </Button>
+                          <Button variant="danger" className="icon-btn delete" iconOnly onClick={() => handleDelete(facility.id)}>
                             <Trash2 size={16} />
-                          </button>
+                          </Button>
                         </>
                       )}
                     </div>
@@ -328,7 +306,7 @@ const ManageResources = ({ isReadOnly = false }) => {
               ))}
               {filteredFacilities.length === 0 && (
                 <tr>
-                  <td colSpan="5" style={{ textAlign: 'center', padding: '3rem', color: '#526f81' }}>
+                  <td colSpan="5" className="resource-table-empty">
                     No resources found matching your search.
                   </td>
                 </tr>
@@ -340,62 +318,28 @@ const ManageResources = ({ isReadOnly = false }) => {
 
       {/* Modal - Reusing the same structure but within this component for encapsulation */}
       {isModalOpen && (
-        <div className="modal-backdrop">
-          <div className="modal-content" style={{ maxWidth: '600px' }}>
-            <div className="modal-header">
-              <h2>{editingFacility ? 'Edit Resource' : 'Add New Resource'}</h2>
-              <button className="close-btn" onClick={handleCloseModal}><X size={20} /></button>
-            </div>
-            <form onSubmit={handleSubmit}>
-              <div className="modal-body">
-                <div className="facility-form" style={{ gridTemplateColumns: '1fr' }}>
-                  <div className="form-group">
-                    <label>Resource Name</label>
-                    <input name="name" value={formData.name} onChange={handleInputChange} required />
-                  </div>
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
-                    <div className="form-group">
-                      <label>Type</label>
-                      <select name="type" value={formData.type} onChange={handleInputChange}>
-                        {FACILITY_TYPES.map(t => <option key={t} value={t}>{t.replace('_', ' ')}</option>)}
-                      </select>
-                    </div>
-                    <div className="form-group">
-                      <label>Status</label>
-                      <select name="status" value={formData.status} onChange={handleInputChange}>
-                        {FACILITY_STATUSES.map(s => <option key={s} value={s}>{s.replace('_', ' ')}</option>)}
-                      </select>
-                    </div>
-                  </div>
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
-                    <div className="form-group">
-                      <label>Building</label>
-                      <select name="building" value={formData.building} onChange={handleInputChange}>
-                        {BUILDINGS.map(b => <option key={b} value={b}>{b}</option>)}
-                      </select>
-                    </div>
-                    <div className="form-group">
-                      <label>Floor</label>
-                      <input type="number" name="floorNumber" value={formData.floorNumber} onChange={handleInputChange} />
-                    </div>
-                  </div>
-                  <div className="form-group">
-                    <label>Capacity</label>
-                    <input type="number" name="capacity" value={formData.capacity} onChange={handleInputChange} required />
-                  </div>
-                  <div className="form-group">
-                    <label>Note</label>
-                    <textarea name="note" value={formData.note} onChange={handleInputChange} placeholder="Add any special notes here..."></textarea>
-                  </div>
-                </div>
-              </div>
-              <div className="modal-footer">
-                <button type="button" className="ghost-btn" onClick={handleCloseModal}>Cancel</button>
-                <button type="submit" className="primary-btn">Save Changes</button>
-              </div>
-            </form>
-          </div>
-        </div>
+        <Modal
+          title={editingFacility ? 'Edit Resource' : 'Add New Resource'}
+          subtitle="Maintain a consistent resource structure across the dashboard."
+          size="md"
+          onClose={handleCloseModal}
+          footer={
+            <>
+              <Button variant="secondary" type="button" onClick={handleCloseModal}>Cancel</Button>
+              <Button type="submit" form="manage-resource-form">Save Changes</Button>
+            </>
+          }
+        >
+          <form id="manage-resource-form" onSubmit={handleSubmit}>
+            <ResourceFormFields
+              formData={formData}
+              onChange={handleInputChange}
+              facilityTypes={FACILITY_TYPES}
+              facilityStatuses={FACILITY_STATUSES}
+              buildings={BUILDINGS}
+            />
+          </form>
+        </Modal>
       )}
 
       {/* Booking Request Modal */}
@@ -404,11 +348,7 @@ const ManageResources = ({ isReadOnly = false }) => {
         onClose={() => setIsBookingModalOpen(false)}
         facility={selectedFacilityForBooking}
         onSuccess={() => {
-          Swal.fire({
-            icon: 'success',
-            title: 'Booking Submitted',
-            text: 'Booking request submitted successfully! You can track its status in your dashboard.'
-          })
+          showSuccess('Booking Submitted', 'Booking request submitted successfully. You can track its status in your dashboard.')
         }}
       />
     </div>

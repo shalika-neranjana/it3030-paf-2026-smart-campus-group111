@@ -6,6 +6,9 @@ import { showError, showSuccess, showWarning, showConfirm } from '../lib/alerts'
 import { api, resolveApiUrl } from '../lib/api'
 import { cropImageByPixels } from '../lib/image'
 import { formatSriLankanPhoneInput, isValidSriLankanMobile } from '../lib/phone'
+import Button from '../components/ui/Button'
+import FormField from '../components/ui/FormField'
+import Modal from '../components/ui/Modal'
 
 const nameRegex = /^[A-Za-z]+(?:[\s'-][A-Za-z]+)*$/
 
@@ -44,7 +47,7 @@ const ProfileEditPage = () => {
         if (data.imageUrl) {
           setImagePreview(resolveApiUrl(data.imageUrl))
         }
-      } catch (error) {
+      } catch {
         showError('Error', 'Failed to load user profile.')
       }
     }
@@ -179,7 +182,7 @@ const ProfileEditPage = () => {
         window.dispatchEvent(new Event('auth-changed'))
         await showSuccess('Account deleted', 'Your account has been deleted successfully.')
         navigate('/login')
-      } catch (error) {
+      } catch {
         await showError('Deletion failed', 'Could not delete your account. Please try again.')
       }
     }
@@ -199,25 +202,22 @@ const ProfileEditPage = () => {
           </div>
 
           <div className="auth-right">
-            <form className="auth-form register-form" onSubmit={onSubmit}>
-              <div className="form-field">
-                <label htmlFor="firstName">First Name <span className="required-star">*</span></label>
-                <input id="firstName" name="firstName" value={formData.firstName} onChange={onInputChange} required />
-              </div>
+            <form className="auth-form register-form ui-field-grid ui-field-grid--two" onSubmit={onSubmit}>
+              <FormField label="First Name" htmlFor="firstName" required>
+                <input className="ui-input" id="firstName" name="firstName" value={formData.firstName} onChange={onInputChange} required />
+              </FormField>
 
-              <div className="form-field">
-                <label htmlFor="lastName">Last Name <span className="required-star">*</span></label>
-                <input id="lastName" name="lastName" value={formData.lastName} onChange={onInputChange} required />
-              </div>
+              <FormField label="Last Name" htmlFor="lastName" required>
+                <input className="ui-input" id="lastName" name="lastName" value={formData.lastName} onChange={onInputChange} required />
+              </FormField>
 
-              <div className="form-field">
-                <label htmlFor="email">Email Address <span className="required-star">*</span></label>
-                <input id="email" name="email" type="email" value={formData.email} onChange={onInputChange} required />
-              </div>
+              <FormField label="Email Address" htmlFor="email" required>
+                <input className="ui-input" id="email" name="email" type="email" value={formData.email} onChange={onInputChange} required />
+              </FormField>
 
-              <div className="form-field">
-                <label htmlFor="phoneNumber">Phone Number <span className="required-star">*</span></label>
+              <FormField label="Phone Number" htmlFor="phoneNumber" required hint="Sri Lankan mobile number">
                 <input
+                  className="ui-input"
                   id="phoneNumber"
                   name="phoneNumber"
                   placeholder="076 296 5411"
@@ -225,73 +225,78 @@ const ProfileEditPage = () => {
                   onChange={onInputChange}
                   required
                 />
-              </div>
+              </FormField>
 
-              <div className="form-field">
-                <label htmlFor="password">New Password (leave blank to keep current)</label>
-                <input id="password" name="password" type="password" value={formData.password} onChange={onInputChange} />
-              </div>
+              <FormField label="New Password" htmlFor="password" hint="Leave blank to keep your current password">
+                <input className="ui-input" id="password" name="password" type="password" value={formData.password} onChange={onInputChange} />
+              </FormField>
 
-              <div className="form-field">
-                <label htmlFor="confirmPassword">Confirm New Password</label>
+              <FormField
+                label="Confirm New Password"
+                htmlFor="confirmPassword"
+                error={!passwordMatch ? 'Passwords do not match.' : ''}
+              >
                 <input
+                  className="ui-input"
                   id="confirmPassword"
                   name="confirmPassword"
                   type="password"
                   value={formData.confirmPassword}
                   onChange={onInputChange}
                 />
-              </div>
+              </FormField>
 
-              {!passwordMatch && (
-                <div className="form-field full">
-                  <span className="field-error">Passwords do not match.</span>
-                </div>
-              )}
+              <FormField label="Profile Image (1:1 crop)" htmlFor="image">
+                <input className="ui-input" id="image" name="image" type="file" accept="image/*" onChange={onImageChange} />
+              </FormField>
 
-              <div className="form-field">
-                <label htmlFor="image">Profile Image (1:1 crop)</label>
-                <input id="image" name="image" type="file" accept="image/*" onChange={onImageChange} />
-              </div>
-
-              {selectedImageUrl && (
-                <div className="form-field">
-                  <button className="ghost-btn full" type="button" onClick={() => setIsCropperOpen(true)}>
+              {selectedImageUrl ? (
+                <FormField>
+                  <Button variant="secondary" fullWidth type="button" onClick={() => setIsCropperOpen(true)}>
                     Adjust Image Crop
-                  </button>
-                </div>
-              )}
+                  </Button>
+                </FormField>
+              ) : null}
 
-              {imagePreview && (
-                <div className="form-field">
+              {imagePreview ? (
+                <FormField>
                   <img className="image-preview" src={imagePreview} alt="Profile preview" />
-                </div>
-              )}
+                </FormField>
+              ) : null}
 
-              <div className="form-field full" style={{ display: 'flex', gap: '1rem', marginTop: '1rem' }}>
-                <button className="primary-btn" style={{ flex: 2 }} type="submit" disabled={isSubmitting}>
-                  {isSubmitting ? 'Saving changes...' : 'Save Changes'}
-                </button>
-                <button
-                  className="ghost-btn"
-                  style={{ flex: 1, borderColor: '#d33', color: '#d33' }}
-                  type="button"
-                  onClick={onDeleteProfile}
-                >
-                  Delete Profile
-                </button>
-              </div>
+              <FormField fullWidth>
+                <div className="auth-form-actions">
+                  <Button className="auth-form-actions-primary" type="submit" disabled={isSubmitting}>
+                    {isSubmitting ? 'Saving changes...' : 'Save Changes'}
+                  </Button>
+                  <Button variant="danger" className="auth-form-actions-secondary" type="button" onClick={onDeleteProfile}>
+                    Delete Profile
+                  </Button>
+                </div>
+              </FormField>
             </form>
           </div>
         </div>
       </div>
 
       {isCropperOpen && selectedImageUrl && (
-        <div className="cropper-modal-backdrop">
-          <div className="cropper-modal" role="dialog" aria-modal="true" aria-label="Crop profile image">
-            <h2>Crop Profile Image</h2>
-            <p>Drag and zoom to select a 1:1 profile image.</p>
-
+        <Modal
+          title="Crop Profile Image"
+          subtitle="Drag and zoom to refine the visible square profile area."
+          size="sm"
+          onClose={() => setIsCropperOpen(false)}
+          footer={
+            <>
+              <Button variant="secondary" type="button" onClick={() => setIsCropperOpen(false)}>
+                Cancel
+              </Button>
+              <Button type="button" onClick={applyCrop}>
+                Apply Crop
+              </Button>
+            </>
+          }
+        >
+          <div className="cropper-modal-content">
             <div className="cropper-area">
               <Cropper
                 image={selectedImageUrl}
@@ -305,30 +310,20 @@ const ProfileEditPage = () => {
               />
             </div>
 
-            <label className="cropper-zoom-label" htmlFor="zoomRange">
-              Zoom
-            </label>
-            <input
-              id="zoomRange"
-              className="cropper-zoom"
-              type="range"
-              min="1"
-              max="3"
-              step="0.01"
-              value={zoom}
-              onChange={(event) => setZoom(Number(event.target.value))}
-            />
-
-            <div className="cropper-actions">
-              <button className="ghost-btn" type="button" onClick={() => setIsCropperOpen(false)}>
-                Cancel
-              </button>
-              <button className="primary-btn" type="button" onClick={applyCrop}>
-                Apply Crop
-              </button>
-            </div>
+            <FormField className="cropper-zoom-field" label="Zoom" htmlFor="zoomRange">
+              <input
+                id="zoomRange"
+                className="cropper-zoom"
+                type="range"
+                min="1"
+                max="3"
+                step="0.01"
+                value={zoom}
+                onChange={(event) => setZoom(Number(event.target.value))}
+              />
+            </FormField>
           </div>
-        </div>
+        </Modal>
       )}
     </div>
   )

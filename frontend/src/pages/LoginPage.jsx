@@ -3,6 +3,8 @@ import { Link, useNavigate } from 'react-router-dom'
 import { GoogleLogin } from '@react-oauth/google'
 import { api } from '../lib/api'
 import { showError, showSuccess } from '../lib/alerts'
+import Button from '../components/ui/Button'
+import FormField from '../components/ui/FormField'
 
 const LoginPage = () => {
   const navigate = useNavigate()
@@ -54,7 +56,7 @@ const LoginPage = () => {
       window.dispatchEvent(new Event('auth-changed'))
       await showSuccess('Login successful', `Welcome back, ${data.firstName}!`)
       navigate('/dashboard')
-    } catch (error) {
+    } catch {
       await showError('Google Login failed', 'Unable to authenticate with Google.')
     }
   }
@@ -67,34 +69,38 @@ const LoginPage = () => {
         <p className="auth-note">Use your UniReserver account credentials.</p>
 
         <form className="auth-form" onSubmit={onSubmit}>
-          <label htmlFor="email">Email Address <span className="required-star">*</span></label>
-          <input
-            id="email"
-            name="email"
-            type="email"
-            value={formData.email}
-            onChange={onChange}
-            required
-          />
+          <FormField label="Email Address" htmlFor="email" required>
+            <input
+              className="ui-input"
+              id="email"
+              name="email"
+              type="email"
+              value={formData.email}
+              onChange={onChange}
+              required
+            />
+          </FormField>
 
-          <label htmlFor="password">Password <span className="required-star">*</span></label>
-          <input
-            id="password"
-            name="password"
-            type="password"
-            value={formData.password}
-            onChange={onChange}
-            required
-          />
+          <FormField label="Password" htmlFor="password" required>
+            <input
+              className="ui-input"
+              id="password"
+              name="password"
+              type="password"
+              value={formData.password}
+              onChange={onChange}
+              required
+            />
+          </FormField>
 
-          <button className="primary-btn full" type="submit" disabled={isSubmitting}>
+          <Button fullWidth type="submit" disabled={isSubmitting}>
             {isSubmitting ? 'Logging in...' : 'Login'}
-          </button>
+          </Button>
         </form>
 
-        <div style={{ marginTop: '1.25rem', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.75rem' }}>
-          <div style={{ color: '#64748b', fontSize: '0.875rem', fontWeight: 600 }}>OR</div>
-          <div style={{ width: '100%', display: 'flex', justifyContent: 'center' }}>
+        <div className="auth-alt">
+          <div className="auth-divider">OR</div>
+          <div className="auth-provider">
             <GoogleLogin
               onSuccess={onGoogleSuccess}
               onError={() => showError('Login Failed', 'Google authentication failed.')}
