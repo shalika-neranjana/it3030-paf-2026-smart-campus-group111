@@ -1,7 +1,7 @@
-import { useEffect, useState, useRef } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { api, resolveApiUrl } from '../lib/api'
 import { MessageSquare, Plus, Clock, CheckCircle, XCircle, AlertCircle, User, Calendar, Image as ImageIcon, Send, Trash2, Edit2, Search } from 'lucide-react'
-import Swal from 'sweetalert2'
+import { extractErrorMessage, showConfirm, showError, showPrompt, showSuccess, showWarning } from '../lib/alerts'
 import './MaintenanceTicketing.css'
 
 const CATEGORIES = [
@@ -65,12 +65,6 @@ const MaintenanceTicketing = ({ mode = 'my' }) => {
   const [staffMembers, setStaffMembers] = useState([])
 
   useEffect(() => {
-    fetchTickets()
-    fetchFacilities()
-    if (isAdmin) fetchStaffMembers()
-  }, [mode])
-
-  useEffect(() => {
     if (selectedTicket) {
       fetchComments(selectedTicket.id)
     }
@@ -86,7 +80,7 @@ const MaintenanceTicketing = ({ mode = 'my' }) => {
     return () => document.removeEventListener('mousedown', handleClickOutside)
   }, [])
 
-  const fetchTickets = async () => {
+  const fetchTickets = useCallback(async () => {
     try {
       setLoading(true)
       const endpoint = mode === 'my' ? '/api/tickets/my' : '/api/tickets'
@@ -97,7 +91,7 @@ const MaintenanceTicketing = ({ mode = 'my' }) => {
     } finally {
       setLoading(false)
     }
-  }
+  }, [mode])
 
   const fetchFacilities = async () => {
     try {
@@ -129,11 +123,7 @@ const MaintenanceTicketing = ({ mode = 'my' }) => {
   const handleCreateTicket = async (e) => {
     e.preventDefault()
     if (!newTicket.resourceId) {
-      Swal.fire({
-        icon: 'error',
-        title: 'Resource Required',
-        text: 'Please select a valid resource from the search suggestions.'
-      })
+      await showError('Resource Required', 'Please select a valid resource from the search suggestions.')
       return
     }
     try {
@@ -152,46 +142,37 @@ const MaintenanceTicketing = ({ mode = 'my' }) => {
         attachmentUrls: []
       })
       setResourceSearch('')
-      Swal.fire({
-        icon: 'success',
-        title: `Ticket ${editingTicketId ? 'Updated' : 'Created'}`,
-        text: `Your maintenance ticket has been ${editingTicketId ? 'updated' : 'submitted'}.`,
-        timer: 2000,
-        showConfirmButton: false
-      })
+      await showSuccess(
+        `Ticket ${editingTicketId ? 'Updated' : 'Created'}`,
+        `Your maintenance ticket has been ${editingTicketId ? 'updated' : 'submitted'}.`,
+        { timer: 1800, showConfirmButton: false }
+      )
       fetchTickets()
     } catch (error) {
-      Swal.fire({
-        icon: 'error',
-        title: 'Error',
-        text: `Failed to ${editingTicketId ? 'update' : 'create'} ticket: ` + (error.response?.data?.message || error.message)
-      })
+      await showError(
+        editingTicketId ? 'Update Failed' : 'Create Failed',
+        `Failed to ${editingTicketId ? 'update' : 'create'} ticket: ${extractErrorMessage(error, 'Unexpected error')}`
+      )
     }
   }
 
+  useEffect(() => {
+    fetchTickets()
+    fetchFacilities()
+    if (isAdmin) fetchStaffMembers()
+  }, [fetchTickets, isAdmin])
+
   const handleDeleteTicket = async (ticketId) => {
-    const result = await Swal.fire({
-      title: 'Delete Ticket?',
-      text: "This action cannot be undone.",
-      icon: 'warning',
-      showCancelButton: true,
-      confirmButtonColor: '#d33',
-      cancelButtonColor: '#3085d6',
-      confirmButtonText: 'Yes, delete it!'
-    })
+    const result = await showConfirm('Delete Ticket?', 'This action cannot be undone.', 'Delete Ticket')
 
     if (result.isConfirmed) {
       try {
         await api.delete(`/api/tickets/${ticketId}`)
         setSelectedTicket(null)
         fetchTickets()
-        Swal.fire('Deleted!', 'Ticket has been removed.', 'success')
-      } catch (error) {
-        Swal.fire({
-          icon: 'error',
-          title: 'Error',
-          text: 'Failed to delete ticket'
-        })
+        await showSuccess('Ticket Deleted', 'Ticket has been removed.', { timer: 1500, showConfirmButton: false })
+      } catch {
+        await showError('Delete Failed', 'Failed to delete ticket.')
       }
     }
   }
@@ -199,7 +180,7 @@ const MaintenanceTicketing = ({ mode = 'my' }) => {
   const handleFileUpload = async (e) => {
     const files = Array.from(e.target.files)
     if (newTicket.attachmentUrls.length + files.length > 3) {
-      alert('Maximum 3 attachments allowed')
+      await showWarning('Attachment Limit', 'Maximum 3 attachments allowed.')
       return
     }
 
@@ -231,18 +212,9 @@ const MaintenanceTicketing = ({ mode = 'my' }) => {
         const { data } = await api.get(`/api/tickets/${ticketId}`)
         setSelectedTicket(data)
       }
-      Swal.fire({
-        icon: 'success',
-        title: successTitle,
-        timer: 1500,
-        showConfirmButton: false
-      })
+      await showSuccess(successTitle, 'The ticket has been updated.', { timer: 1500, showConfirmButton: false })
     } catch (error) {
-      Swal.fire({
-        icon: 'error',
-        title: 'Error',
-        text: error.response?.data?.message || error.message || 'Failed to update ticket'
-      })
+      await showError('Update Failed', extractErrorMessage(error, 'Failed to update ticket'))
     }
   }
 
@@ -256,7 +228,7 @@ const MaintenanceTicketing = ({ mode = 'my' }) => {
 
   const promptAssignTicket = async (ticket) => {
     const availableStaff = staffMembers.filter(member => member.id !== user.id)
-    const { value: techId } = await Swal.fire({
+    const { value: techId } = await showPrompt({
       title: ticket.assignedTechnicianId ? 'Change Assigned Person' : 'Assign Ticket',
       input: 'select',
       inputOptions: Object.fromEntries(
@@ -279,18 +251,19 @@ const MaintenanceTicketing = ({ mode = 'my' }) => {
       await api.post(`/api/tickets/${selectedTicket.id}/comments`, { content: newComment })
       setNewComment('')
       fetchComments(selectedTicket.id)
-    } catch (error) {
-      alert('Failed to add comment')
+    } catch {
+      await showError('Comment Failed', 'Failed to add comment.')
     }
   }
 
   const handleDeleteComment = async (commentId) => {
-    if (!window.confirm('Are you sure you want to delete this comment?')) return
+    const result = await showConfirm('Delete Comment?', 'Are you sure you want to delete this comment?', 'Delete Comment')
+    if (!result.isConfirmed) return
     try {
       await api.delete(`/api/tickets/comments/${commentId}`)
       fetchComments(selectedTicket.id)
-    } catch (error) {
-      alert('Failed to delete comment')
+    } catch {
+      await showError('Delete Failed', 'Failed to delete comment.')
     }
   }
 
@@ -299,8 +272,8 @@ const MaintenanceTicketing = ({ mode = 'my' }) => {
       await api.put(`/api/tickets/comments/${commentId}`, { content: editCommentContent })
       setEditingCommentId(null)
       fetchComments(selectedTicket.id)
-    } catch (error) {
-      alert('Failed to update comment')
+    } catch {
+      await showError('Update Failed', 'Failed to update comment.')
     }
   }
 
@@ -380,7 +353,7 @@ const MaintenanceTicketing = ({ mode = 'my' }) => {
               </select>
             </div>
             <div className="filter-row">
-              <select value={categoryFilter} onChange={(e) => setCategoryFilter(e.target.value)} style={{ gridColumn: 'span 2' }}>
+              <select className="full-span-select" value={categoryFilter} onChange={(e) => setCategoryFilter(e.target.value)}>
                 <option value="ALL">All Categories</option>
                 {CATEGORIES.map(cat => <option key={cat} value={cat}>{cat}</option>)}
               </select>
@@ -454,7 +427,7 @@ const MaintenanceTicketing = ({ mode = 'my' }) => {
                             title="Mark ticket as resolved"
                             onClick={async (e) => {
                               e.stopPropagation()
-                              const { value: notes } = await Swal.fire({
+                              const { value: notes } = await showPrompt({
                                 title: 'Resolution Notes',
                                 input: 'textarea',
                                 inputLabel: 'Enter details about the fix:',
@@ -488,7 +461,7 @@ const MaintenanceTicketing = ({ mode = 'my' }) => {
                         Accept Ticket
                       </button>
                       <button className="action-btn rejected" onClick={async () => {
-                        const { value: reason } = await Swal.fire({
+                        const { value: reason } = await showPrompt({
                           title: 'Rejection Reason',
                           input: 'text',
                           inputLabel: 'Why is this ticket being rejected?',
@@ -522,7 +495,7 @@ const MaintenanceTicketing = ({ mode = 'my' }) => {
                   {(isAdmin || (isStaffOrTech && selectedTicket.assignedTechnicianId === user.id)) &&
                     (selectedTicket.status === 'OPEN' || selectedTicket.status === 'IN_PROGRESS') && (
                     <button className="action-btn resolved" onClick={async () => {
-                      const { value: notes } = await Swal.fire({
+                      const { value: notes } = await showPrompt({
                         title: 'Resolution Notes',
                         input: 'textarea',
                         inputLabel: 'Enter details about the fix:',

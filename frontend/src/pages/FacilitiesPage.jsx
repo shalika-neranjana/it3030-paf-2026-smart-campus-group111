@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { 
   Search, 
@@ -10,12 +10,15 @@ import {
   Layers, 
   Edit2, 
   Trash2, 
-  X,
   Info
 } from 'lucide-react'
-import Swal from 'sweetalert2'
 import { api } from '../lib/api'
 import BookingModal from './BookingModal'
+import Button from '../components/ui/Button'
+import Modal from '../components/ui/Modal'
+import StatusBadge from '../components/ui/StatusBadge'
+import ResourceFormFields from '../components/resources/ResourceFormFields'
+import { extractErrorMessage, showConfirm, showError, showSuccess } from '../lib/alerts'
 
 const FACILITY_TYPES = ['LECTURE_HALL', 'LAB', 'MEETING_ROOM', 'EQUIPMENT', 'SPECIAL']
 const FACILITY_STATUSES = ['ACTIVE', 'OUT_OF_SERVICE']
@@ -46,7 +49,7 @@ const FacilitiesPage = () => {
   const [minCapacity, setMinCapacity] = useState('')
 
   // User state for roles
-  const [user, setUser] = useState(() => {
+  const [user] = useState(() => {
     try {
       const storedUser = localStorage.getItem('authUser')
       return storedUser ? JSON.parse(storedUser) : null
@@ -73,7 +76,7 @@ const FacilitiesPage = () => {
   const [isBookingModalOpen, setIsBookingModalOpen] = useState(false)
   const [selectedFacilityForBooking, setSelectedFacilityForBooking] = useState(null)
 
-  const fetchFacilities = async () => {
+  const fetchFacilities = useCallback(async () => {
     setLoading(true)
     try {
       const params = {}
@@ -98,11 +101,11 @@ const FacilitiesPage = () => {
     } finally {
       setLoading(false)
     }
-  }
+  }, [filterBuilding, filterType, minCapacity, searchQuery])
 
   useEffect(() => {
     fetchFacilities()
-  }, [filterType, filterBuilding, minCapacity])
+  }, [fetchFacilities])
 
   // Debounced search
   useEffect(() => {
@@ -110,7 +113,7 @@ const FacilitiesPage = () => {
       fetchFacilities()
     }, 400)
     return () => clearTimeout(timer)
-  }, [searchQuery])
+  }, [fetchFacilities])
 
   const handleOpenModal = (facility = null) => {
     if (facility) {
@@ -156,61 +159,42 @@ const FacilitiesPage = () => {
     try {
       if (editingFacility) {
         await api.put(`/api/facilities/${editingFacility.id}`, formData)
-        Swal.fire({
-          icon: 'success',
-          title: 'Updated!',
-          text: 'Resource has been updated successfully.',
-          timer: 2000,
-          showConfirmButton: false
+        await showSuccess('Resource Updated', 'Resource details were saved successfully.', {
+          timer: 1800,
+          showConfirmButton: false,
         })
       } else {
         await api.post('/api/facilities', formData)
-        Swal.fire({
-          icon: 'success',
-          title: 'Created!',
-          text: 'New resource has been created successfully.',
-          timer: 2000,
-          showConfirmButton: false
+        await showSuccess('Resource Added', 'The new resource is now available in the catalogue.', {
+          timer: 1800,
+          showConfirmButton: false,
         })
       }
       handleCloseModal()
       fetchFacilities()
     } catch (err) {
-      Swal.fire({
-        icon: 'error',
-        title: 'Error',
-        text: 'Failed to save facility. Please check your permissions.'
-      })
+      await showError('Save Failed', extractErrorMessage(err, 'Failed to save facility. Please check your permissions.'))
       console.error(err)
     }
   }
 
   const handleDelete = async (id) => {
-    const result = await Swal.fire({
-      title: 'Are you sure?',
-      text: "You won't be able to revert this!",
-      icon: 'warning',
-      showCancelButton: true,
-      confirmButtonColor: '#d33',
-      cancelButtonColor: '#3085d6',
-      confirmButtonText: 'Yes, delete it!'
-    })
+    const result = await showConfirm(
+      'Delete Resource?',
+      'This action removes the resource from the catalogue and cannot be undone.',
+      'Delete Resource'
+    )
 
     if (result.isConfirmed) {
       try {
         await api.delete(`/api/facilities/${id}`)
-        Swal.fire(
-          'Deleted!',
-          'Resource has been deleted.',
-          'success'
-        )
+        await showSuccess('Resource Deleted', 'The resource has been removed.', {
+          timer: 1600,
+          showConfirmButton: false,
+        })
         fetchFacilities()
       } catch (err) {
-        Swal.fire({
-          icon: 'error',
-          title: 'Error',
-          text: 'Failed to delete facility.'
-        })
+        await showError('Delete Failed', extractErrorMessage(err, 'Failed to delete facility.'))
         console.error(err)
       }
     }
@@ -231,7 +215,7 @@ const FacilitiesPage = () => {
             <img className="brand-logo" src="/logo.png" alt="UniReserver logo" />
           </Link>
           <div className="nav-links">
-             <Link className="nav-link" to="/dashboard" style={{ color: '#0d4b77', fontWeight: 700, textDecoration: 'none' }}>Dashboard</Link>
+            <Link className="nav-link ui-button ui-button--secondary" to="/dashboard">Dashboard</Link>
           </div>
         </header>
 
@@ -247,6 +231,7 @@ const FacilitiesPage = () => {
           <div className="search-box">
             <Search className="search-icon" size={20} />
             <input 
+              className="ui-input"
               type="text" 
               placeholder="Search by name or note..." 
               value={searchQuery}
@@ -279,9 +264,8 @@ const FacilitiesPage = () => {
 
             <input 
               type="number" 
-              className="filter-select" 
+              className="filter-select filter-select-compact" 
               placeholder="Min Capacity" 
-              style={{ width: '130px' }}
               value={minCapacity}
               onChange={(e) => setMinCapacity(e.target.value)}
             />
@@ -306,23 +290,26 @@ const FacilitiesPage = () => {
         </div>
 
         {isAdmin && (
-          <div className="admin-controls" style={{ marginTop: '1.5rem' }}>
-            <button className="primary-btn" onClick={() => handleOpenModal()}>
-              <Plus size={18} style={{ marginRight: '0.5rem' }} /> Add Resource
-            </button>
+          <div className="admin-controls admin-controls-spaced">
+            <Button onClick={() => handleOpenModal()}>
+              <Plus size={18} /> Add Resource
+            </Button>
           </div>
         )}
 
         {loading ? (
-          <div className="loading">
+          <div className="ui-feedback">
             <div className="spinner"></div>
             <p>Fetching resources...</p>
           </div>
         ) : error ? (
-          <div className="error-message">{error}</div>
+          <div className="ui-feedback ui-feedback--error">
+            <strong>Unable to load resources</strong>
+            <p>{error}</p>
+          </div>
         ) : facilities.length === 0 ? (
-          <div className="no-results">
-            <Info size={48} style={{ opacity: 0.2, marginBottom: '1rem' }} />
+          <div className="ui-feedback ui-feedback-card">
+            <Info size={48} className="ui-feedback-icon" />
             <p>No resources match your criteria.</p>
           </div>
         ) : viewMode === 'grid' ? (
@@ -335,9 +322,7 @@ const FacilitiesPage = () => {
                     alt={facility.name} 
                     className="facility-image" 
                   />
-                  <span className={`status-badge status-${facility.status?.toLowerCase()}`}>
-                    {facility.status?.replace('_', ' ')}
-                  </span>
+                  <StatusBadge className="status-badge" status={facility.status} />
                 </div>
                 <div className="facility-info">
                   <div className="facility-meta">
@@ -359,15 +344,15 @@ const FacilitiesPage = () => {
                   </div>
 
                   <div className="facility-actions">
-                    <button className="primary-btn" onClick={() => handleOpenBookingModal(facility)}>Reserve</button>
+                    <Button onClick={() => handleOpenBookingModal(facility)}>Reserve</Button>
                     {isAdmin && (
                       <>
-                        <button className="icon-btn" onClick={() => handleOpenModal(facility)}>
+                        <Button variant="secondary" className="icon-btn" iconOnly onClick={() => handleOpenModal(facility)}>
                           <Edit2 size={16} />
-                        </button>
-                        <button className="icon-btn delete" onClick={() => handleDelete(facility.id)}>
+                        </Button>
+                        <Button variant="danger" className="icon-btn delete" iconOnly onClick={() => handleDelete(facility.id)}>
                           <Trash2 size={16} />
-                        </button>
+                        </Button>
                       </>
                     )}
                   </div>
@@ -406,27 +391,21 @@ const FacilitiesPage = () => {
                     <td><span className="facility-tag tag-type">{facility.type?.replace('_', ' ')}</span></td>
                     <td>{facility.capacity}</td>
                     <td>
-                      <span className={`status-badge status-${facility.status?.toLowerCase()}`} style={{ position: 'static' }}>
-                        {facility.status?.replace('_', ' ')}
-                      </span>
+                      <StatusBadge status={facility.status} />
                     </td>
                     <td>
                       <div className="table-actions">
-                        <button 
-                          className="ghost-btn" 
-                          style={{ padding: '0.4rem 0.8rem', fontSize: '0.8rem' }}
-                          onClick={() => handleOpenBookingModal(facility)}
-                        >
+                        <Button variant="secondary" className="table-action-button" onClick={() => handleOpenBookingModal(facility)}>
                           Reserve
-                        </button>
+                        </Button>
                         {isAdmin && (
                           <>
-                            <button className="icon-btn" onClick={() => handleOpenModal(facility)}>
+                            <Button variant="secondary" className="icon-btn" iconOnly onClick={() => handleOpenModal(facility)}>
                               <Edit2 size={16} />
-                            </button>
-                            <button className="icon-btn delete" onClick={() => handleDelete(facility.id)}>
+                            </Button>
+                            <Button variant="danger" className="icon-btn delete" iconOnly onClick={() => handleDelete(facility.id)}>
                               <Trash2 size={16} />
-                            </button>
+                            </Button>
                           </>
                         )}
                       </div>
@@ -441,99 +420,31 @@ const FacilitiesPage = () => {
 
       {/* Facility Modal */}
       {isModalOpen && (
-        <div className="modal-backdrop">
-          <div className="modal-content">
-            <div className="modal-header">
-              <h2>{editingFacility ? 'Edit Resource' : 'Add New Resource'}</h2>
-              <button className="close-btn" onClick={handleCloseModal}><X size={20} /></button>
-            </div>
-            <form onSubmit={handleSubmit}>
-              <div className="modal-body">
-                <div className="facility-form">
-                  <div className="form-group full-width">
-                    <label>Resource Name</label>
-                    <input 
-                      name="name" 
-                      value={formData.name} 
-                      onChange={handleInputChange} 
-                      placeholder="e.g. Grand Lecture Hall A" 
-                      required 
-                    />
-                  </div>
-                  <div className="form-group">
-                    <label>Type</label>
-                    <select name="type" value={formData.type} onChange={handleInputChange}>
-                      {FACILITY_TYPES.map(t => (
-                        <option key={t} value={t}>{t.replace('_', ' ')}</option>
-                      ))}
-                    </select>
-                  </div>
-                  <div className="form-group">
-                    <label>Status</label>
-                    <select name="status" value={formData.status} onChange={handleInputChange}>
-                      {FACILITY_STATUSES.map(s => (
-                        <option key={s} value={s}>{s.replace('_', ' ')}</option>
-                      ))}
-                    </select>
-                  </div>
-                  <div className="form-group">
-                    <label>Building</label>
-                    <select name="building" value={formData.building} onChange={handleInputChange}>
-                      {BUILDINGS.map(b => (
-                        <option key={b} value={b}>{b}</option>
-                      ))}
-                    </select>
-                  </div>
-                  <div className="form-group">
-                    <label>Floor Number</label>
-                    <input 
-                      type="number" 
-                      name="floorNumber" 
-                      value={formData.floorNumber} 
-                      onChange={handleInputChange} 
-                      placeholder="e.g. 2" 
-                    />
-                  </div>
-                  <div className="form-group">
-                    <label>Seating Capacity</label>
-                    <input 
-                      type="number" 
-                      name="capacity" 
-                      value={formData.capacity} 
-                      onChange={handleInputChange} 
-                      placeholder="e.g. 150" 
-                      required 
-                    />
-                  </div>
-                  <div className="form-group full-width">
-                    <label>Image URL</label>
-                    <input 
-                      name="imageUrl" 
-                      value={formData.imageUrl} 
-                      onChange={handleInputChange} 
-                      placeholder="https://..." 
-                    />
-                  </div>
-                  <div className="form-group full-width">
-                    <label>Note</label>
-                    <textarea 
-                      name="note" 
-                      value={formData.note} 
-                      onChange={handleInputChange} 
-                      placeholder="Provide details about equipment, specialized features, etc."
-                    ></textarea>
-                  </div>
-                </div>
-              </div>
-              <div className="modal-footer">
-                <button type="button" className="ghost-btn" onClick={handleCloseModal}>Cancel</button>
-                <button type="submit" className="primary-btn">
-                  {editingFacility ? 'Update Resource' : 'Create Resource'}
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
+        <Modal
+          title={editingFacility ? 'Edit Resource' : 'Add New Resource'}
+          subtitle="Use the same structure and metadata across all campus facilities."
+          size="md"
+          onClose={handleCloseModal}
+          footer={
+            <>
+              <Button variant="secondary" type="button" onClick={handleCloseModal}>Cancel</Button>
+              <Button type="submit" form="facility-form">
+                {editingFacility ? 'Update Resource' : 'Create Resource'}
+              </Button>
+            </>
+          }
+        >
+          <form id="facility-form" onSubmit={handleSubmit}>
+            <ResourceFormFields
+              formData={formData}
+              onChange={handleInputChange}
+              facilityTypes={FACILITY_TYPES}
+              facilityStatuses={FACILITY_STATUSES}
+              buildings={BUILDINGS}
+              includeImageUrl
+            />
+          </form>
+        </Modal>
       )}
 
       {/* Booking Request Modal */}
@@ -542,11 +453,7 @@ const FacilitiesPage = () => {
         onClose={() => setIsBookingModalOpen(false)}
         facility={selectedFacilityForBooking}
         onSuccess={() => {
-          Swal.fire({
-            icon: 'success',
-            title: 'Booking Submitted',
-            text: 'Booking request submitted successfully! You can track its status in your dashboard.'
-          })
+          showSuccess('Booking Submitted', 'Booking request submitted successfully. You can track its status in your dashboard.')
         }}
       />
     </div>
