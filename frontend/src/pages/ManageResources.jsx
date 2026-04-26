@@ -52,6 +52,9 @@ const ManageResources = ({ isReadOnly = false }) => {
   // Booking Modal state
   const [isBookingModalOpen, setIsBookingModalOpen] = useState(false)
   const [selectedFacilityForBooking, setSelectedFacilityForBooking] = useState(null)
+  const [isViewBookingsOpen, setIsViewBookingsOpen] = useState(false)
+  const [facilityBookings, setFacilityBookings] = useState([])
+  const [selectedFacilityForView, setSelectedFacilityForView] = useState(null)
 
   const fetchFacilities = useCallback(async () => {
     setLoading(true)
@@ -175,6 +178,18 @@ const ManageResources = ({ isReadOnly = false }) => {
     setIsBookingModalOpen(true)
   }
 
+  const handleViewBookings = async (facility) => {
+    setSelectedFacilityForView(facility)
+    setIsViewBookingsOpen(true)
+    try {
+      const { data } = await api.get(`/api/bookings/facility/${facility.id}`)
+      setFacilityBookings(data)
+    } catch (err) {
+      setFacilityBookings([])
+      console.error('Failed to fetch facility bookings', err)
+    }
+  }
+
   return (
     <div className="resource-manager">
       <div className="ui-section-heading">
@@ -290,6 +305,9 @@ const ManageResources = ({ isReadOnly = false }) => {
                       <Button variant="secondary" className="table-action-button" onClick={() => handleOpenBookingModal(facility)}>
                         Reserve
                       </Button>
+                      <Button variant="secondary" className="table-action-button" onClick={() => handleViewBookings(facility)}>
+                        View Bookings
+                      </Button>
                       {!isReadOnly && (
                         <>
                           <Button variant="secondary" className="icon-btn" iconOnly onClick={() => handleOpenModal(facility)}>
@@ -351,6 +369,38 @@ const ManageResources = ({ isReadOnly = false }) => {
           showSuccess('Booking Submitted', 'Booking request submitted successfully. You can track its status in your dashboard.')
         }}
       />
+
+      {/* View Bookings Modal */}
+      {isViewBookingsOpen && (
+        <Modal
+          title={selectedFacilityForView ? `Bookings for ${selectedFacilityForView.name}` : 'Bookings'}
+          subtitle="Approved and pending reservations for this resource"
+          size="md"
+          onClose={() => { setIsViewBookingsOpen(false); setFacilityBookings([]); setSelectedFacilityForView(null) }}
+        >
+          <div className="bookings-list-modal">
+            {facilityBookings.length === 0 ? (
+              <p>No bookings for this resource.</p>
+            ) : (
+              <div className="booking-list">
+                {facilityBookings.map(b => (
+                  <div key={b.id} className="booking-card booking-card--fullwidth">
+                    <div className="booking-first-line">
+                      <span className="booking-col booking-col-date">{b.date ? new Date(b.date).toLocaleDateString() : ''}</span>
+                      <span className="booking-sep">|</span>
+                      <span className="booking-col booking-col-time">{b.startTime} - {b.endTime}</span>
+                      <span className="booking-sep">|</span>
+                      <span className="booking-col booking-col-user">By {b.userName || 'Unknown'}</span>
+                    </div>
+                    <div className="booking-purpose">{b.purpose}</div>
+                    {b.rejectionReason ? <div className="booking-reason">Reason: {b.rejectionReason}</div> : null}
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </Modal>
+      )}
     </div>
   )
 }

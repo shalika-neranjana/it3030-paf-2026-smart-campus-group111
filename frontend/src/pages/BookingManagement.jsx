@@ -27,7 +27,11 @@ const BookingManagement = ({ mode = 'my' }) => { // 'my' or 'all'
   const [error, setError] = useState(null)
   const [searchQuery, setSearchQuery] = useState('')
   const [statusFilter, setStatusFilter] = useState('')
+  const [facilityFilter, setFacilityFilter] = useState('')
+  const [dateFrom, setDateFrom] = useState('')
+  const [dateTo, setDateTo] = useState('')
   const [rejectionModal, setRejectionModal] = useState({ open: false, bookingId: '', reason: '' })
+  const [facilities, setFacilities] = useState([])
 
   const fetchBookings = useCallback(async () => {
     setLoading(true)
@@ -43,8 +47,18 @@ const BookingManagement = ({ mode = 'my' }) => { // 'my' or 'all'
     }
   }, [mode])
 
+  const fetchFacilities = useCallback(async () => {
+    try {
+      const { data } = await api.get('/api/facilities')
+      setFacilities(data)
+    } catch (err) {
+      console.error('Failed to load facilities for filters', err)
+    }
+  }, [])
+
   useEffect(() => {
     fetchBookings()
+    fetchFacilities()
   }, [fetchBookings])
 
   const handleApprove = async (id) => {
@@ -112,7 +126,12 @@ const BookingManagement = ({ mode = 'my' }) => { // 'my' or 'all'
       (b.userName?.toLowerCase() || '').includes(search)
     
     const matchesStatus = statusFilter === '' || b.status === statusFilter
+    const matchesFacility = facilityFilter === '' || b.facilityId === facilityFilter
+    const bookingDate = b.date ? new Date(b.date) : null
+    const fromOk = !dateFrom || (bookingDate && bookingDate >= new Date(dateFrom))
+    const toOk = !dateTo || (bookingDate && bookingDate <= new Date(dateTo))
     return matchesSearch && matchesStatus
+      && matchesFacility && fromOk && toOk
   }).sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
 
   if (loading) {
@@ -166,6 +185,32 @@ const BookingManagement = ({ mode = 'my' }) => { // 'my' or 'all'
           <option value="REJECTED">Rejected</option>
           <option value="CANCELLED">Cancelled</option>
         </select>
+
+        <select
+          className="filter-select"
+          value={facilityFilter}
+          onChange={(e) => setFacilityFilter(e.target.value)}
+        >
+          <option value="">All Resources</option>
+          {facilities.map(f => (
+            <option key={f.id} value={f.id}>{f.name}</option>
+          ))}
+        </select>
+
+        <input
+          type="date"
+          className="filter-select filter-select-compact"
+          value={dateFrom}
+          onChange={(e) => setDateFrom(e.target.value)}
+          placeholder="From"
+        />
+        <input
+          type="date"
+          className="filter-select filter-select-compact"
+          value={dateTo}
+          onChange={(e) => setDateTo(e.target.value)}
+          placeholder="To"
+        />
       </div>
 
       <div className="bookings-list booking-list">

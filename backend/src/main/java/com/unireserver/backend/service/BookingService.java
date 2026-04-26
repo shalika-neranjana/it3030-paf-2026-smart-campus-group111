@@ -8,6 +8,8 @@ import com.unireserver.backend.model.BookingStatus;
 import com.unireserver.backend.model.Facility;
 import com.unireserver.backend.repository.BookingRepository;
 import com.unireserver.backend.repository.FacilityRepository;
+import com.unireserver.backend.model.Message;
+import com.unireserver.backend.service.MessageService;
 import com.unireserver.backend.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -25,6 +27,7 @@ public class BookingService {
     private final BookingRepository bookingRepository;
     private final FacilityRepository facilityRepository;
     private final UserRepository userRepository;
+    private final MessageService messageService;
 
     public Booking createBooking(Booking booking) {
         if (hasConflict(booking)) {
@@ -48,12 +51,39 @@ public class BookingService {
                 .collect(Collectors.toList());
     }
 
+    public List<BookingResponse> getBookingsForFacility(String facilityId) {
+        return bookingRepository.findByFacilityId(facilityId).stream()
+            .filter(b -> b.getStatus() != BookingStatus.CANCELLED)
+            .map(this::mapToResponse)
+            .collect(Collectors.toList());
+    }
+
     public Booking approveBooking(String id) {
         Booking booking = bookingRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Booking not found"));
         booking.setStatus(BookingStatus.APPROVED);
         booking.setUpdatedAt(Instant.now());
-        return bookingRepository.save(booking);
+        Booking saved = bookingRepository.save(booking);
+
+        String facilityName = booking.getFacilityId() != null ?
+            facilityRepository.findById(booking.getFacilityId()).map(Facility::getName).orElse("Resource") : "Resource";
+        String title = "Booking Approved";
+        String body = String.format("Your booking for %s on %s from %s to %s has been approved.",
+            facilityName,
+            booking.getDate() != null ? booking.getDate().toString() : "",
+            booking.getStartTime() != null ? booking.getStartTime().toString() : "",
+            booking.getEndTime() != null ? booking.getEndTime().toString() : "");
+
+        Message message = Message.builder()
+            .receiverId(booking.getUserId())
+            .title(title)
+            .body(body)
+            .sentAt(java.time.LocalDateTime.now())
+            .isRead(false)
+            .build();
+        messageService.createMessage(message);
+
+        return saved;
     }
 
     public Booking rejectBooking(String id, String reason) {
@@ -62,7 +92,28 @@ public class BookingService {
         booking.setStatus(BookingStatus.REJECTED);
         booking.setRejectionReason(reason);
         booking.setUpdatedAt(Instant.now());
-        return bookingRepository.save(booking);
+        Booking saved = bookingRepository.save(booking);
+
+        String facilityName = booking.getFacilityId() != null ?
+            facilityRepository.findById(booking.getFacilityId()).map(Facility::getName).orElse("Resource") : "Resource";
+        String title = "Booking Rejected";
+        String body = String.format("Your booking for %s on %s from %s to %s was rejected. Reason: %s",
+            facilityName,
+            booking.getDate() != null ? booking.getDate().toString() : "",
+            booking.getStartTime() != null ? booking.getStartTime().toString() : "",
+            booking.getEndTime() != null ? booking.getEndTime().toString() : "",
+            reason != null ? reason : "No reason provided");
+
+        Message message = Message.builder()
+            .receiverId(booking.getUserId())
+            .title(title)
+            .body(body)
+            .sentAt(java.time.LocalDateTime.now())
+            .isRead(false)
+            .build();
+        messageService.createMessage(message);
+
+        return saved;
     }
 
     public Booking cancelBooking(String id) {
